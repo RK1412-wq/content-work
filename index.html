@@ -153,6 +153,21 @@ select:focus,input:focus{border-color:var(--green);}
 .save-msg{display:none;background:var(--tag-g);color:var(--green);border:1.5px solid rgba(46,125,50,.3);border-radius:7px;padding:8px 13px;margin-top:10px;font-size:12px;}
 .divider{height:1.5px;background:var(--border);margin:14px 0;}
 
+/* ── FIREBASE CONFIG BANNER ── */
+.fb-config-banner{background:linear-gradient(135deg,#FFF8E1,#FFF3CD);border:2px solid #F9A825;border-radius:12px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px;}
+.fb-config-banner.hidden{display:none;}
+.fb-icon{font-size:28px;flex-shrink:0;margin-top:2px;}
+.fb-text h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#E65100;margin-bottom:5px;}
+.fb-text p{font-size:12px;color:#5D4037;line-height:1.7;margin-bottom:10px;}
+.fb-inputs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.fb-inputs input{background:#fff;border:1.5px solid #F9A825;color:#333;padding:7px 11px;border-radius:7px;font-size:12px;outline:none;min-width:210px;flex:1;}
+.fb-inputs input:focus{border-color:#E65100;}
+.btn-fb-save{background:#E65100;color:#fff;border:none;padding:8px 18px;border-radius:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s;}
+.btn-fb-save:hover{background:#BF360C;}
+.fb-status{font-size:11px;margin-top:6px;padding:6px 10px;border-radius:6px;display:none;}
+.fb-status.ok{background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;display:block;}
+.fb-status.err{background:#FCE4EC;color:#B71C1C;border:1px solid #EF9A9A;display:block;}
+
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .an{animation:fadeUp .38s ease both;}
 .d1{animation-delay:.04s}.d2{animation-delay:.09s}.d3{animation-delay:.14s}
@@ -164,6 +179,8 @@ select:focus,input:focus{border-color:var(--green);}
   .chart-row{grid-template-columns:1fr;}
   .fmt-grid{grid-template-columns:1fr;}
   .sync-methods-grid{grid-template-columns:1fr!important;}
+  .fb-inputs{flex-direction:column;}
+  .fb-inputs input{min-width:unset;}
 }
 </style>
 </head>
@@ -186,6 +203,22 @@ select:focus,input:focus{border-color:var(--green);}
 </header>
 
 <div class="main">
+
+  <!-- ── FIREBASE CONFIG BANNER ── -->
+  <div class="fb-config-banner an" id="fbConfigBanner">
+    <div class="fb-icon">🔥</div>
+    <div class="fb-text" style="flex:1">
+      <h4>Firebase Setup Required — Paste Your Config Below</h4>
+      <p>Enter your Firebase project credentials to enable real-time cloud sync for all team members. You only need to do this once — values are saved in your browser.</p>
+      <div class="fb-inputs">
+        <input type="text" id="fbApiKey"       placeholder="apiKey  (e.g. AIzaSy...)" autocomplete="off">
+        <input type="text" id="fbAuthDomain"   placeholder="authDomain  (e.g. myapp.firebaseapp.com)" autocomplete="off">
+        <input type="text" id="fbProjectId"    placeholder="projectId  (e.g. my-project-id)" autocomplete="off">
+      </div>
+      <button class="btn-fb-save" onclick="saveFbConfig()">🔗 Connect to Firebase</button>
+      <div class="fb-status" id="fbStatus"></div>
+    </div>
+  </div>
 
   <!-- KPI -->
   <div class="kpi-grid an d1" id="kpiRow"></div>
@@ -296,7 +329,146 @@ select:focus,input:focus{border-color:var(--green);}
 
 </div>
 
+<!-- ════════════════════════════════════════
+     FIREBASE SDK  (loaded as ES module)
+     ════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }            from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot }
+                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+// ── Expose Firebase helpers to the global scope so non-module code can call them ──
+window._fbReady    = false;
+window._fbDB       = null;
+window._fbDocRef   = null;
+window._fbUnsub    = null;
+
+window.initFirebase = function(cfg){
+  try {
+    const app = initializeApp(cfg);
+    const db  = getFirestore(app);
+    window._fbDB     = db;
+    window._fbDocRef = doc(db, 'wed_dashboard', 'shared_data');
+    window._fbReady  = true;
+    return true;
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    return false;
+  }
+};
+
+window.fbLoad = async function(){
+  if(!window._fbReady) return null;
+  try {
+    const snap = await getDoc(window._fbDocRef);
+    return snap.exists() ? snap.data().payload : null;
+  } catch(e){ console.warn('fbLoad error:', e); return null; }
+};
+
+window.fbSave = async function(jsonStr){
+  if(!window._fbReady) return false;
+  try {
+    await setDoc(window._fbDocRef, { payload: jsonStr, updatedAt: Date.now() });
+    return true;
+  } catch(e){ console.warn('fbSave error:', e); return false; }
+};
+
+window.fbSubscribe = function(callback){
+  if(!window._fbReady) return;
+  if(window._fbUnsub) window._fbUnsub();
+  window._fbUnsub = onSnapshot(window._fbDocRef, snap => {
+    if(snap.exists()) callback(snap.data().payload);
+  });
+};
+</script>
+
+<!-- ════════════════════════════════════════
+     MAIN APP LOGIC
+     ════════════════════════════════════════ -->
 <script>
+// ── Firebase config stored in localStorage (browser-local, not shared) ──
+const FB_CFG_KEY = 'wed_fb_config';
+
+function loadFbConfig(){
+  try{ return JSON.parse(localStorage.getItem(FB_CFG_KEY)||'null'); }
+  catch(e){ return null; }
+}
+function storeFbConfig(cfg){
+  localStorage.setItem(FB_CFG_KEY, JSON.stringify(cfg));
+}
+
+async function saveFbConfig(){
+  const apiKey     = document.getElementById('fbApiKey').value.trim();
+  const authDomain = document.getElementById('fbAuthDomain').value.trim();
+  const projectId  = document.getElementById('fbProjectId').value.trim();
+  if(!apiKey || !authDomain || !projectId){
+    showFbStatus('err','⚠️ Please fill in all three fields.');
+    return;
+  }
+  const cfg = { apiKey, authDomain, projectId };
+  const ok  = window.initFirebase(cfg);
+  if(!ok){ showFbStatus('err','❌ Firebase init failed. Check your credentials.'); return; }
+  // Test connection
+  try {
+    await window.fbLoad();
+    storeFbConfig(cfg);
+    showFbStatus('ok','✅ Connected to Firebase! Data will now sync in real-time across all team members.');
+    document.getElementById('fbConfigBanner').classList.add('hidden');
+    setSyncBadge(true);
+    await reloadFromFirebase();
+    window.fbSubscribe(onRemoteChange);
+  } catch(e){
+    showFbStatus('err','❌ Could not reach Firestore. Check Project ID and Firestore rules. Error: '+e.message);
+  }
+}
+window.saveFbConfig = saveFbConfig;
+
+function showFbStatus(type, msg){
+  const el = document.getElementById('fbStatus');
+  el.className = 'fb-status ' + type;
+  el.textContent = msg;
+}
+
+function setSyncBadge(active, label=''){
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if(active){
+    dot.className = 'sync-dot pulse';
+    lbl.textContent = label || '🔥 Firebase Live';
+  } else {
+    dot.className = 'sync-dot off';
+    lbl.textContent = 'Not syncing';
+  }
+}
+
+async function reloadFromFirebase(){
+  const raw = await window.fbLoad();
+  if(raw){
+    try{
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === 'object'){
+        DB = parsed;
+        rebuildMonthSelect();
+        renderDashboard();
+        buildEntryPanel();
+      }
+    }catch(e){}
+  }
+}
+
+let _ignoreRemote = false;
+function onRemoteChange(raw){
+  if(_ignoreRemote) return;
+  try{
+    const parsed = JSON.parse(raw);
+    if(parsed && typeof parsed === 'object'){
+      DB = parsed;
+      rebuildMonthSelect();
+      renderDashboard();
+    }
+  }catch(e){}
+}
+
 // ════════════════════════════════════════
 //  CONSTANTS
 // ════════════════════════════════════════
@@ -308,9 +480,6 @@ const EDIT_RATES  = {Complex:1.0, Moderate:0.75, Simple:0.5};
 const FIXED_BUILD = Object.keys(BUILD_RATES);
 const FIXED_EDIT  = Object.keys(EDIT_RATES);
 const SYNC_INTERVAL = 5000;
-
-// Shared palette: orange, yellow, green, blue, red
-// Same colors for column chart (build) AND pie chart (edit)
 const PERSON_COLORS = ['#E65100','#F9A825','#2E7D32','#1565C0','#C62828'];
 
 // ════════════════════════════════════════
@@ -325,63 +494,80 @@ function toggleTheme(){
 }
 
 // ════════════════════════════════════════
-//  STORAGE
+//  IN-MEMORY DB  (synced to/from Firebase)
 // ════════════════════════════════════════
-function emptyPerson(){return{build:{Complex:0,Moderate:0,Simple:0,extra:[]},edit:{Complex:0,Moderate:0,Simple:0,extra:[]}};}
-function emptyMonth(){const m={};MEMBERS.forEach(p=>{m[p]=emptyPerson();});return m;}
+function emptyPerson(){ return {build:{Complex:0,Moderate:0,Simple:0,extra:[]}, edit:{Complex:0,Moderate:0,Simple:0,extra:[]}}; }
+function emptyMonth(){ const m={}; MEMBERS.forEach(p=>{m[p]=emptyPerson();}); return m; }
 
-// ── Shared storage helpers (window.storage, shared=true → visible to all team members) ──
-const STORAGE_KEY='wed7_shared';
+function seedDB(){
+  const d = {};
+  d['January 2026']  = emptyMonth();
+  d['February 2026'] = emptyMonth();
+  const mar = emptyMonth();
+  mar.Ramesh      = {build:{Complex:9,Moderate:5,Simple:3,extra:[]},  edit:{Complex:10,Moderate:10,Simple:6, extra:[]}};
+  mar.Parivallal  = {build:{Complex:9,Moderate:0,Simple:0,extra:[]},  edit:{Complex:50,Moderate:50,Simple:51,extra:[]}};
+  mar.Srinadh     = {build:{Complex:9,Moderate:0,Simple:0,extra:[]},  edit:{Complex:40,Moderate:40,Simple:11,extra:[]}};
+  mar.Vigneswari  = {build:{Complex:9,Moderate:5,Simple:0,extra:[]},  edit:{Complex:45,Moderate:13,Simple:5, extra:[]}};
+  mar.Krishna     = {build:{Complex:0,Moderate:5,Simple:0,extra:[]},  edit:{Complex:60,Moderate:40,Simple:32,extra:[]}};
+  d['March 2026'] = mar;
+  return d;
+}
+
+let DB           = {};
+let currentMonth = 'March 2026';
+let activePerson = MEMBERS[0];
+let extraCount   = {};
+
+// ════════════════════════════════════════
+//  PERSIST  — write to Firebase; fallback to localStorage
+// ════════════════════════════════════════
+async function persistDB(){
+  const json = JSON.stringify(DB);
+  if(window._fbReady){
+    _ignoreRemote = true;
+    await window.fbSave(json);
+    setTimeout(()=>{ _ignoreRemote = false; }, 1500);
+  } else {
+    // Fallback: localStorage only (single-user)
+    try{ localStorage.setItem('wed7_local_fallback', json); }catch(e){}
+  }
+}
+
 async function loadDB(){
+  // 1. Try Firebase
+  if(window._fbReady){
+    const raw = await window.fbLoad();
+    if(raw){ try{ const p=JSON.parse(raw); if(p&&typeof p==='object') return p; }catch(e){} }
+  }
+  // 2. Fallback to localStorage
   try{
-    const res=await window.storage.get(STORAGE_KEY,true);
-    if(res&&res.value){const parsed=JSON.parse(res.value);if(parsed&&typeof parsed==='object')return parsed;}
+    const raw = localStorage.getItem('wed7_local_fallback');
+    if(raw){ const p=JSON.parse(raw); if(p&&typeof p==='object') return p; }
   }catch(e){}
   return seedDB();
 }
-async function persistDB(){
-  try{await window.storage.set(STORAGE_KEY,JSON.stringify(DB),true);}
-  catch(e){console.warn('Storage write failed:',e);}
-}
-function seedDB(){
-  const d={};
-  d['January 2026']=emptyMonth(); d['February 2026']=emptyMonth();
-  const mar=emptyMonth();
-  mar.Ramesh     ={build:{Complex:9,Moderate:5,Simple:3,extra:[]},edit:{Complex:10,Moderate:10,Simple:6,extra:[]}};
-  mar.Parivallal ={build:{Complex:9,Moderate:0,Simple:0,extra:[]},edit:{Complex:50,Moderate:50,Simple:51,extra:[]}};
-  mar.Srinadh    ={build:{Complex:9,Moderate:0,Simple:0,extra:[]},edit:{Complex:40,Moderate:40,Simple:11,extra:[]}};
-  mar.Vigneswari ={build:{Complex:9,Moderate:5,Simple:0,extra:[]},edit:{Complex:45,Moderate:13,Simple:5,extra:[]}};
-  mar.Krishna    ={build:{Complex:0,Moderate:5,Simple:0,extra:[]},edit:{Complex:60,Moderate:40,Simple:32,extra:[]}};
-  d['March 2026']=mar;
-  return d;
-}
-let DB={}; // populated async in init
-let currentMonth='March 2026';
-let activePerson=MEMBERS[0];
-let extraCount={};
 
 // ════════════════════════════════════════
 //  HELPERS
 // ════════════════════════════════════════
-function sortedKeys(){return Object.keys(DB).sort((a,b)=>{const[ma,ya]=a.split(' ');const[mb,yb]=b.split(' ');return(+ya-+yb)||(MONTH_NAMES.indexOf(ma)-MONTH_NAMES.indexOf(mb));});}
-function getP(p,mo){return DB[mo]?.[p]||emptyPerson();}
-function calcBuild(p,mo){const bd=getP(p,mo).build;return+(FIXED_BUILD.reduce((s,t)=>s+(+(bd[t]||0))*BUILD_RATES[t],0)+(bd.extra||[]).reduce((s,r)=>s+(+r.hrs||0),0)).toFixed(2);}
-function calcEdit(p,mo){const ed=getP(p,mo).edit;return+(FIXED_EDIT.reduce((s,t)=>s+(+(ed[t]||0))*EDIT_RATES[t],0)+(ed.extra||[]).reduce((s,r)=>s+(+r.hrs||0),0)).toFixed(2);}
-function calcTotal(p,mo){return+(calcBuild(p,mo)+calcEdit(p,mo)).toFixed(2);}
+function sortedKeys(){ return Object.keys(DB).sort((a,b)=>{ const[ma,ya]=a.split(' ');const[mb,yb]=b.split(' ');return(+ya-+yb)||(MONTH_NAMES.indexOf(ma)-MONTH_NAMES.indexOf(mb)); }); }
+function getP(p,mo){ return DB[mo]?.[p]||emptyPerson(); }
+function calcBuild(p,mo){ const bd=getP(p,mo).build; return+(FIXED_BUILD.reduce((s,t)=>s+(+(bd[t]||0))*BUILD_RATES[t],0)+(bd.extra||[]).reduce((s,r)=>s+(+r.hrs||0),0)).toFixed(2); }
+function calcEdit(p,mo){  const ed=getP(p,mo).edit;  return+(FIXED_EDIT.reduce((s,t)=>s+(+(ed[t]||0))*EDIT_RATES[t],0)+(ed.extra||[]).reduce((s,r)=>s+(+r.hrs||0),0)).toFixed(2); }
+function calcTotal(p,mo){ return+(calcBuild(p,mo)+calcEdit(p,mo)).toFixed(2); }
 
 // ════════════════════════════════════════
-//  AUTO-SYNC
+//  AUTO-SYNC (Excel File)
 // ════════════════════════════════════════
 let syncHandle=null,syncTimer=null,countdownTimer=null,countdownVal=5,lastModified='';
 async function connectFile(){
   if(!('showOpenFilePicker' in window)){document.getElementById('apiWarning').style.display='block';return;}
   try{const[handle]=await window.showOpenFilePicker({types:[{description:'Excel / CSV',accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx'],'application/vnd.ms-excel':['.xls'],'text/csv':['.csv']}}]});syncHandle=handle;startSync();}catch(e){}
 }
-function startSync(){document.getElementById('connectBtn').style.display='none';document.getElementById('disconnectBtn').style.display='inline-flex';updateSyncUI(true);doSync();syncTimer=setInterval(doSync,SYNC_INTERVAL);startCountdown();}
+function startSync(){document.getElementById('connectBtn').style.display='none';document.getElementById('disconnectBtn').style.display='inline-flex';document.getElementById('syncStatusBar').innerHTML=`<span>🔗 Excel: <b>${syncHandle.name||'file'}</b></span>`;doSync();syncTimer=setInterval(doSync,SYNC_INTERVAL);startCountdown();}
 function startCountdown(){countdownVal=5;if(countdownTimer)clearInterval(countdownTimer);countdownTimer=setInterval(()=>{countdownVal--;const el=document.getElementById('countdown');if(el)el.textContent=`Next check in ${countdownVal}s`;if(countdownVal<=0)countdownVal=5;},1000);const el=document.getElementById('countdown');if(el){el.style.display='inline-block';el.textContent='Checking in 5s';}}
-async function doSync(){if(!syncHandle)return;try{const file=await syncHandle.getFile();const sig=file.lastModified+'_'+file.size;if(sig===lastModified){countdownVal=5;return;}lastModified=sig;const ab=await file.arrayBuffer();const wb=XLSX.read(ab,{type:'array'});const res=[];let detectedMonth=null;wb.SheetNames.forEach(sn=>{const ws=wb.Sheets[sn];const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});if(!detectedMonth){const m=String(data[1]?.[4]||'').trim();const y=String(data[1]?.[7]||'').trim();if(MONTH_NAMES.includes(m)&&+y>2000)detectedMonth=`${m} ${y}`;}parseSheet(data,sn,res);});applyImport(res,detectedMonth);updateSyncUI(true,syncHandle.name||'Excel file');countdownVal=5;}catch(e){updateSyncUI(false,'Read error — file may be locked');}}
-function disconnectFile(){syncHandle=null;clearInterval(syncTimer);clearInterval(countdownTimer);syncTimer=null;document.getElementById('connectBtn').style.display='inline-flex';document.getElementById('disconnectBtn').style.display='none';document.getElementById('countdown').style.display='none';updateSyncUI(false);}
-function updateSyncUI(active,filename=''){const dot=document.getElementById('syncDot');const lbl=document.getElementById('syncLabel');const bar=document.getElementById('syncStatusBar');if(active){dot.className='sync-dot pulse';lbl.textContent='Auto-syncing';bar.innerHTML=`<span>🔗 Connected: <b>${filename||syncHandle?.name||'file'}</b></span>`;}else{dot.className='sync-dot off';lbl.textContent='Not syncing';bar.innerHTML=`<span>${filename||'No file connected'}</span>`;}}
+async function doSync(){if(!syncHandle)return;try{const file=await syncHandle.getFile();const sig=file.lastModified+'_'+file.size;if(sig===lastModified){countdownVal=5;return;}lastModified=sig;const ab=await file.arrayBuffer();const wb=XLSX.read(ab,{type:'array'});const res=[];let detectedMonth=null;wb.SheetNames.forEach(sn=>{const ws=wb.Sheets[sn];const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});if(!detectedMonth){const m=String(data[1]?.[4]||'').trim();const y=String(data[1]?.[7]||'').trim();if(MONTH_NAMES.includes(m)&&+y>2000)detectedMonth=`${m} ${y}`;}parseSheet(data,sn,res);});applyImport(res,detectedMonth);countdownVal=5;}catch(e){document.getElementById('syncStatusBar').innerHTML=`<span>⚠️ Read error — file may be locked</span>`;}}
+function disconnectFile(){syncHandle=null;clearInterval(syncTimer);clearInterval(countdownTimer);syncTimer=null;document.getElementById('connectBtn').style.display='inline-flex';document.getElementById('disconnectBtn').style.display='none';document.getElementById('countdown').style.display='none';document.getElementById('syncStatusBar').innerHTML=`<span>No file connected</span>`;}
 
 // ════════════════════════════════════════
 //  MANUAL UPLOAD
@@ -433,7 +619,6 @@ function renderCharts(){
   const buildData = MEMBERS.map(m => calcBuild(m, currentMonth));
   const editData  = MEMBERS.map(m => calcEdit(m, currentMonth));
 
-  // ── Column chart — Page Build ──
   if(buildChartInst) buildChartInst.destroy();
   buildChartInst = new Chart(document.getElementById('buildChart').getContext('2d'), {
     type: 'bar',
@@ -471,7 +656,6 @@ function renderCharts(){
     `<span class="legend-item"><span class="legend-swatch" style="background:${PERSON_COLORS[i]}"></span>${m}: <strong>${buildData[i]} hrs</strong></span>`
   ).join('');
 
-  // ── Pie chart — Page Edit ──
   if(editChartInst) editChartInst.destroy();
   editChartInst = new Chart(document.getElementById('editChart').getContext('2d'), {
     type: 'pie',
@@ -512,10 +696,6 @@ function renderCharts(){
 
 // ════════════════════════════════════════
 //  SUMMARY TABLE
-//  Per person:
-//    Row 1 — [Person, rowspan=3] | Build badge | Type dropdown | rate | pages | calc hrs
-//    Row 2 — Edit badge | Type dropdown | rate | pages | calc hrs
-//    Row 3 — Total (spans cols 2–6)
 // ════════════════════════════════════════
 function renderTable(){
   let html = '';
@@ -523,60 +703,29 @@ function renderTable(){
     const pd    = getP(p, currentMonth);
     const color = PERSON_COLORS[pi];
     const total = calcTotal(p, currentMonth);
-
-    // Default type = Complex for both sections
-    const bType = 'Complex';
-    const eType = 'Complex';
-
-    const bPages = pd.build[bType] || 0;
-    const bRate  = BUILD_RATES[bType];
-    const bHrs   = +(bPages * bRate).toFixed(2);
-
-    const ePages = pd.edit[eType] || 0;
-    const eRate  = EDIT_RATES[eType];
-    const eHrs   = +(ePages * eRate).toFixed(2);
-
-    const buildOpts = FIXED_BUILD.map(t =>
-      `<option value="${t}"${t===bType?' selected':''}>${t}</option>`
-    ).join('');
-    const editOpts  = FIXED_EDIT.map(t =>
-      `<option value="${t}"${t===eType?' selected':''}>${t}</option>`
-    ).join('');
-
+    const bType = 'Complex', eType = 'Complex';
+    const bPages = pd.build[bType] || 0, bRate = BUILD_RATES[bType], bHrs = +(bPages * bRate).toFixed(2);
+    const ePages = pd.edit[eType]  || 0, eRate = EDIT_RATES[eType],  eHrs = +(ePages * eRate).toFixed(2);
+    const buildOpts = FIXED_BUILD.map(t => `<option value="${t}"${t===bType?' selected':''}>${t}</option>`).join('');
+    const editOpts  = FIXED_EDIT.map(t  => `<option value="${t}"${t===eType?' selected':''}>${t}</option>`).join('');
     html += `
       <tr>
-        <td rowspan="3" class="person-cell"
-          style="color:${color};border-left:3px solid ${color};padding-left:10px;">
-          ${p}
-        </td>
+        <td rowspan="3" class="person-cell" style="color:${color};border-left:3px solid ${color};padding-left:10px;">${p}</td>
         <td><span class="badge bg">Build</span></td>
-        <td>
-          <select class="type-sel" id="sel_${pi}_build"
-            onchange="onTypeChange(${pi},'build')">
-            ${buildOpts}
-          </select>
-        </td>
-        <td class="num" id="rate_${pi}_build" style="color:var(--green)">${bRate}</td>
+        <td><select class="type-sel" id="sel_${pi}_build" onchange="onTypeChange(${pi},'build')">${buildOpts}</select></td>
+        <td class="num" id="rate_${pi}_build"  style="color:var(--green)">${bRate}</td>
         <td class="num" id="pages_${pi}_build">${bPages}</td>
-        <td class="num" id="hrs_${pi}_build" style="color:var(--rose)">${bHrs > 0 ? bHrs : '—'}</td>
+        <td class="num" id="hrs_${pi}_build"   style="color:var(--rose)">${bHrs > 0 ? bHrs : '—'}</td>
       </tr>
       <tr>
         <td><span class="badge br">Edit</span></td>
-        <td>
-          <select class="type-sel" id="sel_${pi}_edit"
-            onchange="onTypeChange(${pi},'edit')">
-            ${editOpts}
-          </select>
-        </td>
-        <td class="num" id="rate_${pi}_edit" style="color:var(--green)">${eRate}</td>
+        <td><select class="type-sel" id="sel_${pi}_edit" onchange="onTypeChange(${pi},'edit')">${editOpts}</select></td>
+        <td class="num" id="rate_${pi}_edit"   style="color:var(--green)">${eRate}</td>
         <td class="num" id="pages_${pi}_edit">${ePages}</td>
-        <td class="num" id="hrs_${pi}_edit" style="color:var(--rose)">${eHrs > 0 ? eHrs : '—'}</td>
+        <td class="num" id="hrs_${pi}_edit"    style="color:var(--rose)">${eHrs > 0 ? eHrs : '—'}</td>
       </tr>
       <tr class="totrow">
-        <td colspan="4"
-          style="color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px">
-          Total
-        </td>
+        <td colspan="4" style="color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px">Total</td>
         <td></td>
         <td class="num" id="tot_${pi}" style="color:${color};font-size:13px">${total} hrs</td>
       </tr>`;
@@ -584,17 +733,13 @@ function renderTable(){
   document.getElementById('tableBody').innerHTML = html;
 }
 
-// ── Fires when a type dropdown changes
 function onTypeChange(pi, sec){
-  const p      = MEMBERS[pi];
-  const pd     = getP(p, currentMonth);
-  const selEl  = document.getElementById(`sel_${pi}_${sec}`);
-  const type   = selEl.value;
-  const rates  = sec === 'build' ? BUILD_RATES : EDIT_RATES;
-  const rate   = rates[type] !== undefined ? rates[type] : null;
-  const pages  = (pd[sec] && pd[sec][type] !== undefined) ? (pd[sec][type] || 0) : 0;
-  const hrs    = rate !== null ? +(pages * rate).toFixed(2) : pages;
-
+  const p = MEMBERS[pi], pd = getP(p, currentMonth);
+  const type = document.getElementById(`sel_${pi}_${sec}`).value;
+  const rates = sec === 'build' ? BUILD_RATES : EDIT_RATES;
+  const rate  = rates[type] !== undefined ? rates[type] : null;
+  const pages = (pd[sec] && pd[sec][type] !== undefined) ? (pd[sec][type] || 0) : 0;
+  const hrs   = rate !== null ? +(pages * rate).toFixed(2) : pages;
   document.getElementById(`rate_${pi}_${sec}`).textContent  = rate !== null ? rate : 'manual';
   document.getElementById(`pages_${pi}_${sec}`).textContent = pages;
   document.getElementById(`hrs_${pi}_${sec}`).textContent   = hrs > 0 ? hrs : '—';
@@ -603,9 +748,9 @@ function onTypeChange(pi, sec){
 // ════════════════════════════════════════
 //  ENTRY PANEL
 // ════════════════════════════════════════
-function pid(n){return n.replace(/\s+/g,'_');}
+function pid(n){ return n.replace(/\s+/g,'_'); }
 function buildEntryPanel(){
-  const key=getEntryKey();const srcData=DB[key]||null;extraCount={};
+  const key=getEntryKey(); const srcData=DB[key]||null; extraCount={};
   document.getElementById('personTabs').innerHTML=MEMBERS.map(p=>`<button class="ptab ${p===activePerson?'active':''}" onclick="switchPerson('${p}')">${p}</button>`).join('');
   document.getElementById('personForms').innerHTML=MEMBERS.map(p=>{const pd=srcData?(srcData[p]||emptyPerson()):emptyPerson();return`<div class="pform ${p===activePerson?'active':''}" id="pf_${p}">${personFormHTML(p,pd)}</div>`;}).join('');
 }
@@ -618,7 +763,7 @@ function personFormHTML(person,pd){
         <td><input type="number" id="inp_${P}_${secKey}_${type}" value="${pages}" min="0" step="1" placeholder="0" oninput="liveCalc('${P}','${secKey}','${type}',${rates[type]})"></td>
         <td><span class="calc-pill" id="cal_${P}_${secKey}_${type}">${hrs>0?hrs:'—'}</span></td></tr>`;
     }).join('');
-    const extras=(d.extra||[]);const ek=`${P}_${secKey}`;extraCount[ek]=extras.length;
+    const extras=(d.extra||[]); const ek=`${P}_${secKey}`; extraCount[ek]=extras.length;
     const exRows=extras.map((ex,i)=>extraRowHTML(P,secKey,i,ex)).join('');
     const secTotal=types.reduce((s,t)=>s+(+(d[t]||0))*rates[t],0)+extras.reduce((s,r)=>s+(+r.hrs||0),0);
     return`<div class="fsec">${label}</div>
@@ -651,51 +796,75 @@ function switchPerson(p){activePerson=p;document.querySelectorAll('.ptab').forEa
 function liveCalc(P,secKey,type,rate){const pages=+(document.getElementById(`inp_${P}_${secKey}_${type}`)?.value||0);const hrs=+(pages*rate).toFixed(2);const el=document.getElementById(`cal_${P}_${secKey}_${type}`);if(el)el.textContent=hrs>0?hrs:'—';refreshSec(P,secKey);}
 function refreshSec(P,secKey){const types=secKey==='build'?FIXED_BUILD:FIXED_EDIT;const rates=secKey==='build'?BUILD_RATES:EDIT_RATES;let total=types.reduce((s,t)=>s+(+(document.getElementById(`inp_${P}_${secKey}_${t}`)?.value||0))*rates[t],0);document.querySelectorAll(`[id^="${P}_${secKey}_ex_"][id$="_hrs"]`).forEach(el=>{total+=(+el.value||0);});const el=document.getElementById(`sec_${P}_${secKey}`);if(el)el.textContent=total>0?+total.toFixed(2)+' hrs':'—';refreshGrand(P);}
 function refreshGrand(P){let total=0;['build','edit'].forEach(sec=>{const types=sec==='build'?FIXED_BUILD:FIXED_EDIT;const rates=sec==='build'?BUILD_RATES:EDIT_RATES;types.forEach(t=>{total+=(+(document.getElementById(`inp_${P}_${sec}_${t}`)?.value||0))*rates[t];});document.querySelectorAll(`[id^="${P}_${sec}_ex_"][id$="_hrs"]`).forEach(el=>{total+=(+el.value||0);});});const el=document.getElementById(`grand_${P}`);if(el)el.textContent=total>0?+total.toFixed(2)+' hrs':'—';}
-async function saveAllData(){const key=getEntryKey();if(!DB[key])DB[key]=emptyMonth();MEMBERS.forEach(person=>{const P=pid(person);if(!DB[key][person])DB[key][person]=emptyPerson();['build','edit'].forEach(sec=>{const types=sec==='build'?FIXED_BUILD:FIXED_EDIT;types.forEach(t=>{DB[key][person][sec][t]=+(document.getElementById(`inp_${P}_${sec}_${t}`)?.value||0);});const extras=[];document.querySelectorAll(`[id^="tr_${P}_${sec}_ex_"]`).forEach(tr=>{const rawId=tr.id.replace('tr_','');const le=document.getElementById(`${rawId}_label`);const pe=document.getElementById(`${rawId}_pages`);const he=document.getElementById(`${rawId}_hrs`);if(!he)return;extras.push({label:le?.value||'',pages:+(pe?.value||0),hrs:+(he?.value||0)});});DB[key][person][sec].extra=extras;});});await persistDB();currentMonth=key;rebuildMonthSelect();renderDashboard();const msg=document.getElementById('saveMsg');msg.style.display='block';setTimeout(()=>{msg.style.display='none';},3000);}
+
+async function saveAllData(){
+  const key=getEntryKey();
+  if(!DB[key])DB[key]=emptyMonth();
+  MEMBERS.forEach(person=>{
+    const P=pid(person);
+    if(!DB[key][person])DB[key][person]=emptyPerson();
+    ['build','edit'].forEach(sec=>{
+      const types=sec==='build'?FIXED_BUILD:FIXED_EDIT;
+      types.forEach(t=>{DB[key][person][sec][t]=+(document.getElementById(`inp_${P}_${sec}_${t}`)?.value||0);});
+      const extras=[];
+      document.querySelectorAll(`[id^="tr_${P}_${sec}_ex_"]`).forEach(tr=>{
+        const rawId=tr.id.replace('tr_','');
+        const le=document.getElementById(`${rawId}_label`);
+        const pe=document.getElementById(`${rawId}_pages`);
+        const he=document.getElementById(`${rawId}_hrs`);
+        if(!he)return;
+        extras.push({label:le?.value||'',pages:+(pe?.value||0),hrs:+(he?.value||0)});
+      });
+      DB[key][person][sec].extra=extras;
+    });
+  });
+  await persistDB();
+  currentMonth=key;
+  rebuildMonthSelect();
+  renderDashboard();
+  const msg=document.getElementById('saveMsg');
+  msg.textContent = window._fbReady ? '✅ Saved to Firebase! All team members will see this update.' : '✅ Saved locally (connect Firebase for team sync).';
+  msg.style.display='block';
+  setTimeout(()=>{msg.style.display='none';},4000);
+}
+
 function showMsg(type,msg){document.getElementById('importOk').style.display='none';document.getElementById('importErr').style.display='none';const el=document.getElementById(type==='ok'?'importOk':'importErr');el.textContent=msg;el.style.display='block';if(type==='ok')setTimeout(()=>{el.style.display='none';},6000);}
 
 // ════════════════════════════════════════
 //  RENDER + INIT
 // ════════════════════════════════════════
-function renderDashboard(){renderKPI();renderCharts();renderTable();}
-
-// Poll shared storage every 8s so team members see updates without refreshing
-let lastSharedSig='';
-async function pollSharedStorage(){
-  try{
-    const res=await window.storage.get(STORAGE_KEY,true);
-    if(res&&res.value&&res.value!==lastSharedSig){
-      lastSharedSig=res.value;
-      const parsed=JSON.parse(res.value);
-      if(parsed&&typeof parsed==='object'){
-        DB=parsed;
-        rebuildMonthSelect();
-        renderDashboard();
-      }
-    }
-  }catch(e){}
-}
+function renderDashboard(){ renderKPI(); renderCharts(); renderTable(); }
 
 async function init(){
-  // Show loading state
   document.getElementById('kpiRow').innerHTML=
-    `<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">⏳ Loading shared data…</div>`;
+    `<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">⏳ Loading data…</div>`;
+
+  // Try to restore saved Firebase config
+  const savedCfg = loadFbConfig();
+  if(savedCfg){
+    const ok = window.initFirebase(savedCfg);
+    if(ok){
+      document.getElementById('fbConfigBanner').classList.add('hidden');
+      setSyncBadge(true);
+      window.fbSubscribe(onRemoteChange);
+    }
+  }
+
   DB = await loadDB();
-  lastSharedSig = JSON.stringify(DB);
   rebuildMonthSelect();
   renderDashboard();
-  const now=new Date();
-  document.getElementById('entryMonth').value=MONTH_NAMES[now.getMonth()];
-  document.getElementById('entryYear').value=now.getFullYear();
+  const now = new Date();
+  document.getElementById('entryMonth').value = MONTH_NAMES[now.getMonth()];
+  document.getElementById('entryYear').value  = now.getFullYear();
   buildEntryPanel();
   if(!('showOpenFilePicker' in window)){
-    document.getElementById('apiWarning').style.display='block';
-    document.getElementById('connectBtn').style.display='none';
+    document.getElementById('apiWarning').style.display = 'block';
+    document.getElementById('connectBtn').style.display = 'none';
   }
-  // Poll every 8 seconds so all viewers stay in sync
-  setInterval(pollSharedStorage, 8000);
 }
-init();
+
+// Wait for the ES-module <script> to finish registering globals, then init
+window.addEventListener('load', init);
 </script>
 </body>
 </html>
