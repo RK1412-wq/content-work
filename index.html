@@ -411,6 +411,15 @@ window.fbSubscribe=function(callback){if(!window._fbReady)return;if(window._fbUn
 const FB_CFG_KEY  = 'wed_fb_config';
 const MEMBERS_KEY = 'wed_members_v2';
 
+// ── CHANGE 1: Derive the default month dynamically from the current year ──
+// Rules:
+//   • Always default to "January <currentYear>" when the dashboard opens.
+//   • When the calendar year rolls over (e.g. 2026 → 2027), this
+//     automatically resolves to "January 2027" with no code changes needed.
+const _NOW         = new Date();
+const _CUR_YEAR    = _NOW.getFullYear();   // e.g. 2026, 2027, …
+const DEFAULT_MONTH = `January ${_CUR_YEAR}`;  // "January 2026" in 2026, "January 2027" in 2027, etc.
+
 function loadFbConfig(){try{return JSON.parse(localStorage.getItem(FB_CFG_KEY)||'null');}catch(e){return null;}}
 function storeFbConfig(cfg){localStorage.setItem(FB_CFG_KEY,JSON.stringify(cfg));}
 
@@ -450,25 +459,11 @@ const FIXED_BUILD   = Object.keys(BUILD_RATES);
 const FIXED_EDIT    = Object.keys(EDIT_RATES);
 const SYNC_INTERVAL = 5000;
 
-// ── UPDATED: Gradient Core Palette for both charts ──
-// Base gradient: #35297F → #5B2C8E → #961789
-// Extended members beyond 3 cycle through interpolated stops
 const CHART_GRADIENT_PALETTE = [
-  '#35297F', // stop 1 — deep purple
-  '#4A268A', // stop 2 — mid-purple
-  '#5B2C8E', // stop 3 — purple-magenta
-  '#7A1F8C', // stop 4 — magenta-purple
-  '#961789', // stop 5 — magenta
-  '#6B2191', // stop 6 — extra members
-  '#3E2D85', // stop 7
-  '#812090', // stop 8
-  '#441E87', // stop 9
-  '#8E1A8A', // stop 10
+  '#35297F','#4A268A','#5B2C8E','#7A1F8C','#961789',
+  '#6B2191','#3E2D85','#812090','#441E87','#8E1A8A',
 ];
-
-function getMemberColor(i){
-  return CHART_GRADIENT_PALETTE[i % CHART_GRADIENT_PALETTE.length];
-}
+function getMemberColor(i){return CHART_GRADIENT_PALETTE[i%CHART_GRADIENT_PALETTE.length];}
 
 // ── Theme ──
 let isDark=false;
@@ -477,17 +472,31 @@ function toggleTheme(){isDark=!isDark;document.documentElement.setAttribute('dat
 // ── DB ──
 function emptyPerson(){return{build:{Complex:0,Moderate:0,Simple:0,extra:[]},edit:{Complex:0,Moderate:0,Simple:0,extra:[]}};}
 function emptyMonth(){const m={};MEMBERS.forEach(p=>{m[p]=emptyPerson();});return m;}
+
+// ── CHANGE 2: seedDB now seeds January of the current year instead of
+//    hardcoded "March 2026". The demo data stays useful and always
+//    matches the default landing month. ──
 function seedDB(){
-  const d={};d['January 2026']=emptyMonth();d['February 2026']=emptyMonth();
-  const mar=emptyMonth();
-  mar.Ramesh    ={build:{Complex:9,Moderate:5,Simple:3,extra:[]},edit:{Complex:10,Moderate:10,Simple:6,extra:[]}};
-  mar.Parivallal={build:{Complex:9,Moderate:0,Simple:0,extra:[]},edit:{Complex:50,Moderate:50,Simple:51,extra:[]}};
-  mar.Srinadh   ={build:{Complex:9,Moderate:0,Simple:0,extra:[]},edit:{Complex:40,Moderate:40,Simple:11,extra:[]}};
-  mar.Vigneswari={build:{Complex:9,Moderate:5,Simple:0,extra:[]},edit:{Complex:45,Moderate:13,Simple:5,extra:[]}};
-  mar.Krishna   ={build:{Complex:0,Moderate:5,Simple:0,extra:[]},edit:{Complex:60,Moderate:40,Simple:32,extra:[]}};
-  d['March 2026']=mar;return d;
+  const d={};
+  // Seed empty months for the two months before January so the
+  // month selector has some history to show.
+  const prevYear = _CUR_YEAR - 1;
+  d[`November ${prevYear}`] = emptyMonth();
+  d[`December ${prevYear}`] = emptyMonth();
+
+  // Seed January of the current year with the demo data.
+  const jan = emptyMonth();
+  jan.Ramesh     = {build:{Complex:9, Moderate:5,Simple:3,extra:[]},edit:{Complex:10,Moderate:10,Simple:6, extra:[]}};
+  jan.Parivallal = {build:{Complex:9, Moderate:0,Simple:0,extra:[]},edit:{Complex:50,Moderate:50,Simple:51,extra:[]}};
+  jan.Srinadh    = {build:{Complex:9, Moderate:0,Simple:0,extra:[]},edit:{Complex:40,Moderate:40,Simple:11,extra:[]}};
+  jan.Vigneswari = {build:{Complex:9, Moderate:5,Simple:0,extra:[]},edit:{Complex:45,Moderate:13,Simple:5, extra:[]}};
+  jan.Krishna    = {build:{Complex:0, Moderate:5,Simple:0,extra:[]},edit:{Complex:60,Moderate:40,Simple:32,extra:[]}};
+  d[DEFAULT_MONTH] = jan;
+  return d;
 }
-let DB={},currentMonth='March 2026',activePerson=MEMBERS[0],extraCount={};
+
+// ── CHANGE 3: currentMonth now starts as "January <currentYear>" ──
+let DB={}, currentMonth=DEFAULT_MONTH, activePerson=MEMBERS[0], extraCount={};
 
 async function persistDB(){const json=JSON.stringify(DB);if(window._fbReady){_ignoreRemote=true;await window.fbSave(json);setTimeout(()=>{_ignoreRemote=false;},1500);}else{try{localStorage.setItem('wed7_local_fallback',json);}catch(e){}}}
 async function loadDB(){if(window._fbReady){const raw=await window.fbLoad();if(raw){try{const p=JSON.parse(raw);if(p&&typeof p==='object')return p;}catch(e){}}}try{const raw=localStorage.getItem('wed7_local_fallback');if(raw){const p=JSON.parse(raw);if(p&&typeof p==='object')return p;}}catch(e){}return seedDB();}
@@ -522,7 +531,16 @@ function parseSheet(rows,sheetName,result){const sLow=sheetName.toLowerCase();le
 async function applyImport(result,detectedMonth){let monthKey=detectedMonth||getEntryKey();if(!DB[monthKey])DB[monthKey]=emptyMonth();MEMBERS.forEach(p=>{if(!DB[monthKey][p])DB[monthKey][p]=emptyPerson();FIXED_BUILD.forEach(t=>{DB[monthKey][p].build[t]=0;});FIXED_EDIT.forEach(t=>{DB[monthKey][p].edit[t]=0;});});result.forEach(({person,sec,type,pages})=>{if(!MEMBERS.includes(person))return;const pd=DB[monthKey][person];const fixed=sec==='build'?FIXED_BUILD:FIXED_EDIT;if(fixed.includes(type))pd[sec][type]=pages;else pd[sec].extra.push({label:type,pages,hrs:pages});});await persistDB();currentMonth=monthKey;rebuildMonthSelect();renderDashboard();buildEntryPanel();}
 
 // ── Month Select ──
-function rebuildMonthSelect(){const sel=document.getElementById('monthSelect');sel.innerHTML='';sortedKeys().forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;if(k===currentMonth)o.selected=true;sel.appendChild(o);});}
+function rebuildMonthSelect(){
+  const sel=document.getElementById('monthSelect');
+  sel.innerHTML='';
+  sortedKeys().forEach(k=>{
+    const o=document.createElement('option');
+    o.value=k;o.textContent=k;
+    if(k===currentMonth)o.selected=true;
+    sel.appendChild(o);
+  });
+}
 function switchMonth(){currentMonth=document.getElementById('monthSelect').value;renderDashboard();}
 function getEntryKey(){return`${document.getElementById('entryMonth').value} ${document.getElementById('entryYear').value}`;}
 function onEntryMonthChange(){buildEntryPanel();}
@@ -541,29 +559,18 @@ function renderKPI(){
   document.getElementById('kpiRow').style.gridTemplateColumns=`repeat(${cols},1fr)`;
 }
 
-// ════════════════════════════════════════
-//  CHARTS — UPDATED COLOR LOGIC
-//  Column chart: gradient palette bars, theme-aware grid/tick/tooltip
-//  Pie chart:    same gradient palette slices, theme-aware tooltip
-// ════════════════════════════════════════
 let buildChartInst,editChartInst;
-
 function renderCharts(){
-  // ── Theme-aware values ──
-  // Light: bg #F7F7F9, text #1C1C1C, accent #007BFF, highlight #10B981, grid #E5E7EB
-  // Dark:  bg #121212, text #F5F5F5, accent #00FFFF, highlight #A3FF00, grid #2E2E2E
   const gridColor    = isDark ? '#2E2E2E'  : '#E5E7EB';
   const tickColor    = isDark ? '#F5F5F5'  : '#1C1C1C';
   const tooltipBg    = isDark ? '#121212'  : '#F7F7F9';
   const tooltipTitle = isDark ? '#F5F5F5'  : '#1C1C1C';
-  const accentColor  = isDark ? '#00FFFF'  : '#007BFF';   // column tooltip body + y-axis title
-  const hlColor      = isDark ? '#A3FF00'  : '#10B981';   // pie tooltip body
+  const accentColor  = isDark ? '#00FFFF'  : '#007BFF';
+  const hlColor      = isDark ? '#A3FF00'  : '#10B981';
 
-  // ── Per-member gradient colors ──
   const colors    = MEMBERS.map((m,i) => getMemberColor(i));
-  const colorsFill= colors.map(c => c + 'CC'); // ~80% opacity fill
+  const colorsFill= colors.map(c => c + 'CC');
 
-  // ── Total pages strip ──
   const bpEl=document.getElementById('buildTotalPages'),epEl=document.getElementById('editTotalPages');
   if(bpEl) bpEl.textContent=calcTotalBuildPages(currentMonth);
   if(epEl) epEl.textContent=calcTotalEditPages(currentMonth);
@@ -571,7 +578,6 @@ function renderCharts(){
   const buildData = MEMBERS.map(m => calcBuild(m, currentMonth));
   const editData  = MEMBERS.map(m => calcEdit(m, currentMonth));
 
-  // ── COLUMN CHART (Bar) ──
   if(buildChartInst) buildChartInst.destroy();
   buildChartInst = new Chart(document.getElementById('buildChart').getContext('2d'), {
     type: 'bar',
@@ -621,7 +627,6 @@ function renderCharts(){
     }
   });
 
-  // Build legend
   document.getElementById('buildLegend').innerHTML = MEMBERS.map((m,i) =>
     `<span class="legend-item">
       <span class="legend-swatch" style="background:${colors[i]}"></span>
@@ -629,7 +634,6 @@ function renderCharts(){
     </span>`
   ).join('');
 
-  // ── PIE CHART ──
   if(editChartInst) editChartInst.destroy();
   editChartInst = new Chart(document.getElementById('editChart').getContext('2d'), {
     type: 'pie',
@@ -665,7 +669,6 @@ function renderCharts(){
     }
   });
 
-  // Edit legend
   const editTotal = editData.reduce((a,b) => a+b, 0);
   document.getElementById('editLegend').innerHTML = MEMBERS.map((m,i) => {
     const pct = editTotal > 0 ? ((editData[i]/editTotal)*100).toFixed(1) : 0;
@@ -870,17 +873,55 @@ function renderDashboard(){renderKPI();renderCharts();renderTable();}
 
 async function init(){
   document.getElementById('kpiRow').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">⏳ Loading data…</div>`;
+
+  // Load saved members
   const saved=loadMembersState();
   MEMBERS=saved||[...BASE_MEMBERS];
   activePerson=MEMBERS.length>0?MEMBERS[0]:BASE_MEMBERS[0];
+
+  // Try Firebase
   const savedCfg=loadFbConfig();
-  if(savedCfg){const ok=window.initFirebase(savedCfg);if(ok){document.getElementById('fbConfigBanner').classList.add('hidden');setSyncBadge(true);window.fbSubscribe(onRemoteChange);}}
-  DB=await loadDB();rebuildMonthSelect();renderDashboard();
-  const now=new Date();
-  document.getElementById('entryMonth').value=MONTH_NAMES[now.getMonth()];
-  document.getElementById('entryYear').value=now.getFullYear();
+  if(savedCfg){
+    const ok=window.initFirebase(savedCfg);
+    if(ok){
+      document.getElementById('fbConfigBanner').classList.add('hidden');
+      setSyncBadge(true);
+      window.fbSubscribe(onRemoteChange);
+    }
+  }
+
+  // Load DB (Firebase → localStorage → seedDB)
+  DB=await loadDB();
+
+  // ── CHANGE 4: Ensure the default month always exists in DB.
+  //    If the loaded data (from Firebase or localStorage) doesn't have
+  //    "January <currentYear>", create it as an empty month so the
+  //    dashboard never lands on a blank or missing key. ──
+  if(!DB[DEFAULT_MONTH]){
+    DB[DEFAULT_MONTH]=emptyMonth();
+  }
+
+  // ── CHANGE 5: currentMonth is already set to DEFAULT_MONTH at declaration
+  //    time. But if DB was loaded from storage and that key existed, we
+  //    honour it. If it doesn't contain DEFAULT_MONTH, we reset to it. ──
+  if(!DB[currentMonth]){
+    currentMonth=DEFAULT_MONTH;
+  }
+
+  rebuildMonthSelect();
+  renderDashboard();
+
+  // ── CHANGE 6: Entry form always defaults to January of the current year,
+  //    not the real current month.  This keeps the entry form in sync with
+  //    what the dashboard is showing on first open. ──
+  document.getElementById('entryMonth').value = 'January';
+  document.getElementById('entryYear').value  = _CUR_YEAR;
   buildEntryPanel();
-  if(!('showOpenFilePicker' in window)){document.getElementById('apiWarning').style.display='block';document.getElementById('connectBtn').style.display='none';}
+
+  if(!('showOpenFilePicker' in window)){
+    document.getElementById('apiWarning').style.display='block';
+    document.getElementById('connectBtn').style.display='none';
+  }
 }
 window.addEventListener('load',init);
 </script>
