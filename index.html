@@ -50,6 +50,24 @@ h1{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;}
 .sync-dot.pulse{animation:pulse 1.4s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 
+.export-wrap{position:relative;}
+.export-btn{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.38);color:#fff;padding:6px 14px;border-radius:18px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;transition:background .2s;white-space:nowrap;}
+.export-btn:hover{background:rgba(255,255,255,.30);}
+.export-btn .arrow{font-size:10px;transition:transform .2s;}
+.export-btn.open .arrow{transform:rotate(180deg);}
+.export-dropdown{position:absolute;top:calc(100% + 7px);right:0;background:#fff;border:1.5px solid #D0C8FF;border-radius:11px;box-shadow:0 8px 28px rgba(53,41,127,.22);min-width:200px;overflow:hidden;z-index:500;display:none;animation:fadeUp .18s ease;}
+.export-dropdown.show{display:block;}
+.export-dropdown-header{padding:8px 14px 6px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B5BAE;border-bottom:1px solid #EDEAFF;}
+.export-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .15s;font-size:13px;color:#1a1a2e;font-family:'DM Sans',sans-serif;font-weight:500;}
+.export-item:hover{background:#F5F2FF;}
+.export-item .ei-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ei-excel{background:#E6F4EA;}
+.ei-pdf{background:#FCE8E8;}
+.ei-ppt{background:#FFF0E6;}
+.export-item .ei-label{font-size:13px;font-weight:600;}
+.export-item .ei-sub{font-size:10px;color:#6B5BAE;margin-top:1px;}
+.export-divider{height:1px;background:#EDEAFF;margin:3px 0;}
+
 .main{padding:22px 30px;max-width:1380px;margin:0 auto;}
 select,input[type=number],input[type=text]{background:var(--input-bg);border:1.5px solid var(--border);color:var(--text);padding:7px 10px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
 select:focus,input:focus{border-color:var(--green);}
@@ -186,6 +204,16 @@ select:focus,input:focus{border-color:var(--green);}
 .save-msg{display:none;background:var(--tag-g);color:var(--green);border:1.5px solid rgba(88,67,212,.28);border-radius:7px;padding:8px 13px;margin-top:10px;font-size:12px;}
 .divider{height:1.5px;background:var(--border);margin:14px 0;}
 
+.save-export-row{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.export-entry-wrap{position:relative;}
+.export-entry-btn{background:var(--surface);color:var(--green);border:1.5px solid var(--green);padding:9px 18px;border-radius:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .18s;}
+.export-entry-btn:hover{background:var(--tag-g);}
+.export-entry-btn .arrow{font-size:10px;transition:transform .2s;}
+.export-entry-btn.open .arrow{transform:rotate(180deg);}
+.export-entry-dropdown{position:absolute;bottom:calc(100% + 7px);left:0;background:#fff;border:1.5px solid #D0C8FF;border-radius:11px;box-shadow:0 -8px 28px rgba(53,41,127,.18);min-width:210px;overflow:hidden;z-index:500;display:none;animation:fadeDown .18s ease;}
+.export-entry-dropdown.show{display:block;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
 .fb-config-banner{background:linear-gradient(135deg,#F0EEFF,#FCE8FF);border:2px solid #961789;border-radius:12px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:flex-start;gap:14px;}
 .fb-config-banner.hidden{display:none;}
 .fb-icon{font-size:28px;flex-shrink:0;margin-top:2px;}
@@ -230,6 +258,37 @@ select:focus,input:focus{border-color:var(--green);}
     <div class="sync-badge"><span class="sync-dot off" id="syncDot"></span><span id="syncLabel">Not syncing</span></div>
     <span class="hdr-lbl">Month:</span>
     <select class="hdr-sel" id="monthSelect" onchange="switchMonth()"></select>
+    <div class="export-wrap" id="hdrExportWrap">
+      <button class="export-btn" id="hdrExportBtn" onclick="toggleExportDropdown()">
+        📤 Export <span class="arrow">▾</span>
+      </button>
+      <div class="export-dropdown" id="hdrExportDropdown">
+        <div class="export-dropdown-header">Export: <span id="exportMonthLabel">—</span></div>
+        <div class="export-item" onclick="exportExcel()">
+          <div class="ei-icon ei-excel">📊</div>
+          <div>
+            <div class="ei-label">Export as Excel (.csv)</div>
+            <div class="ei-sub">All data, charts data, detailed rows</div>
+          </div>
+        </div>
+        <div class="export-divider"></div>
+        <div class="export-item" onclick="exportPDF()">
+          <div class="ei-icon ei-pdf">📄</div>
+          <div>
+            <div class="ei-label">Export as PDF</div>
+            <div class="ei-sub">Full page — all details</div>
+          </div>
+        </div>
+        <div class="export-divider"></div>
+        <div class="export-item" onclick="exportPPT()">
+          <div class="ei-icon ei-ppt">📑</div>
+          <div>
+            <div class="ei-label">Export as PPT</div>
+            <div class="ei-sub">Charts + total hours only</div>
+          </div>
+        </div>
+      </div>
+    </div>
     <button class="theme-btn" onclick="toggleTheme()" id="themeBtn">🌙 Dark</button>
   </div>
 </header>
@@ -376,7 +435,31 @@ select:focus,input:focus{border-color:var(--green);}
       <div class="amp-note">💡 <strong>Excel Template:</strong> Downloads a pre-formatted Excel file with all current team members. Share it with the team to fill in page counts and re-import via the sync panel above.</div>
     </div>
     <div id="personForms"></div>
-    <button class="btn btn-save" onclick="saveAllData()">💾 Save &amp; Update Dashboard</button>
+    <div class="save-export-row">
+      <button class="btn btn-save" onclick="saveAllData()">💾 Save &amp; Update Dashboard</button>
+      <div class="export-entry-wrap" id="entryExportWrap">
+        <button class="export-entry-btn" id="entryExportBtn" onclick="toggleEntryExportDropdown()">
+          📤 Export <span class="arrow">▾</span>
+        </button>
+        <div class="export-entry-dropdown" id="entryExportDropdown">
+          <div class="export-dropdown-header" style="padding:8px 14px 6px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B5BAE;border-bottom:1px solid #EDEAFF;">Export: <span id="entryExportMonthLabel">—</span></div>
+          <div class="export-item" onclick="exportExcel()">
+            <div class="ei-icon ei-excel">📊</div>
+            <div><div class="ei-label">Export as Excel (.csv)</div><div class="ei-sub">All data with chart data</div></div>
+          </div>
+          <div class="export-divider"></div>
+          <div class="export-item" onclick="exportPDF()">
+            <div class="ei-icon ei-pdf">📄</div>
+            <div><div class="ei-label">Export as PDF</div><div class="ei-sub">Full page snapshot</div></div>
+          </div>
+          <div class="export-divider"></div>
+          <div class="export-item" onclick="exportPPT()">
+            <div class="ei-icon ei-ppt">📑</div>
+            <div><div class="ei-label">Export as PPT</div><div class="ei-sub">Charts + total hours</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="save-msg" id="saveMsg"></div>
   </div>
 
@@ -394,7 +477,7 @@ select:focus,input:focus{border-color:var(--green);}
   </div>
 </div>
 
-<!-- ═══════════ FIREBASE SDK ═══════════ -->
+<!-- FIREBASE SDK -->
 <script type="module">
 import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, onSnapshot }
@@ -406,19 +489,17 @@ window.fbSave=async function(jsonStr){if(!window._fbReady)return false;try{await
 window.fbSubscribe=function(callback){if(!window._fbReady)return;if(window._fbUnsub)window._fbUnsub();window._fbUnsub=onSnapshot(window._fbDocRef,snap=>{if(snap.exists())callback(snap.data().payload);});};
 </script>
 
-<!-- ═══════════ MAIN APP ═══════════ -->
+<!-- PptxGenJS for PPT export -->
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js"></script>
+
+<!-- MAIN APP -->
 <script>
 const FB_CFG_KEY  = 'wed_fb_config';
 const MEMBERS_KEY = 'wed_members_v2';
 
-// ── CHANGE 1: Derive the default month dynamically from the current year ──
-// Rules:
-//   • Always default to "January <currentYear>" when the dashboard opens.
-//   • When the calendar year rolls over (e.g. 2026 → 2027), this
-//     automatically resolves to "January 2027" with no code changes needed.
 const _NOW         = new Date();
-const _CUR_YEAR    = _NOW.getFullYear();   // e.g. 2026, 2027, …
-const DEFAULT_MONTH = `January ${_CUR_YEAR}`;  // "January 2026" in 2026, "January 2027" in 2027, etc.
+const _CUR_YEAR    = _NOW.getFullYear();
+const DEFAULT_MONTH = `January ${_CUR_YEAR}`;
 
 function loadFbConfig(){try{return JSON.parse(localStorage.getItem(FB_CFG_KEY)||'null');}catch(e){return null;}}
 function storeFbConfig(cfg){localStorage.setItem(FB_CFG_KEY,JSON.stringify(cfg));}
@@ -449,7 +530,6 @@ async function reloadFromFirebase(){const raw=await window.fbLoad();if(raw){try{
 let _ignoreRemote=false;
 function onRemoteChange(raw){if(_ignoreRemote)return;try{const p=JSON.parse(raw);if(p&&typeof p==='object'){DB=p;rebuildMonthSelect();renderDashboard();}}catch(e){}}
 
-// ── Constants ──
 const BASE_MEMBERS  = ['Ramesh','Parivallal','Srinadh','Vigneswari','Krishna'];
 let   MEMBERS       = [...BASE_MEMBERS];
 const MONTH_NAMES   = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -465,26 +545,17 @@ const CHART_GRADIENT_PALETTE = [
 ];
 function getMemberColor(i){return CHART_GRADIENT_PALETTE[i%CHART_GRADIENT_PALETTE.length];}
 
-// ── Theme ──
 let isDark=false;
 function toggleTheme(){isDark=!isDark;document.documentElement.setAttribute('data-theme',isDark?'dark':'light');document.getElementById('themeBtn').textContent=isDark?'☀️ Light':'🌙 Dark';renderCharts();}
 
-// ── DB ──
 function emptyPerson(){return{build:{Complex:0,Moderate:0,Simple:0,extra:[]},edit:{Complex:0,Moderate:0,Simple:0,extra:[]}};}
 function emptyMonth(){const m={};MEMBERS.forEach(p=>{m[p]=emptyPerson();});return m;}
 
-// ── CHANGE 2: seedDB now seeds January of the current year instead of
-//    hardcoded "March 2026". The demo data stays useful and always
-//    matches the default landing month. ──
 function seedDB(){
   const d={};
-  // Seed empty months for the two months before January so the
-  // month selector has some history to show.
   const prevYear = _CUR_YEAR - 1;
   d[`November ${prevYear}`] = emptyMonth();
   d[`December ${prevYear}`] = emptyMonth();
-
-  // Seed January of the current year with the demo data.
   const jan = emptyMonth();
   jan.Ramesh     = {build:{Complex:9, Moderate:5,Simple:3,extra:[]},edit:{Complex:10,Moderate:10,Simple:6, extra:[]}};
   jan.Parivallal = {build:{Complex:9, Moderate:0,Simple:0,extra:[]},edit:{Complex:50,Moderate:50,Simple:51,extra:[]}};
@@ -495,13 +566,11 @@ function seedDB(){
   return d;
 }
 
-// ── CHANGE 3: currentMonth now starts as "January <currentYear>" ──
 let DB={}, currentMonth=DEFAULT_MONTH, activePerson=MEMBERS[0], extraCount={};
 
 async function persistDB(){const json=JSON.stringify(DB);if(window._fbReady){_ignoreRemote=true;await window.fbSave(json);setTimeout(()=>{_ignoreRemote=false;},1500);}else{try{localStorage.setItem('wed7_local_fallback',json);}catch(e){}}}
 async function loadDB(){if(window._fbReady){const raw=await window.fbLoad();if(raw){try{const p=JSON.parse(raw);if(p&&typeof p==='object')return p;}catch(e){}}}try{const raw=localStorage.getItem('wed7_local_fallback');if(raw){const p=JSON.parse(raw);if(p&&typeof p==='object')return p;}}catch(e){}return seedDB();}
 
-// ── Helpers ──
 function sortedKeys(){return Object.keys(DB).sort((a,b)=>{const[ma,ya]=a.split(' ');const[mb,yb]=b.split(' ');return(+ya-+yb)||(MONTH_NAMES.indexOf(ma)-MONTH_NAMES.indexOf(mb));});}
 function getP(p,mo){return DB[mo]?.[p]||emptyPerson();}
 function calcBuild(p,mo){const bd=getP(p,mo).build;return+(FIXED_BUILD.reduce((s,t)=>s+(+(bd[t]||0))*BUILD_RATES[t],0)+(bd.extra||[]).reduce((s,r)=>s+(+r.hrs||0),0)).toFixed(2);}
@@ -526,9 +595,33 @@ function onFileSelect(e){const f=e.target.files[0];if(f)processFile(f);}
 function processFile(file){const r=new FileReader();r.onload=function(e){try{const wb=XLSX.read(e.target.result,{type:'array'});importWorkbook(wb,file.name);}catch(err){showMsg('err','❌ Could not read file: '+err.message);}};r.readAsArrayBuffer(file);}
 function importWorkbook(wb,fname){const res=[];let detectedMonth=null;wb.SheetNames.forEach(sn=>{const ws=wb.Sheets[sn];const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});if(!detectedMonth){const m=String(data[1]?.[4]||'').trim();const y=String(data[1]?.[7]||'').trim();if(MONTH_NAMES.includes(m)&&+y>2000)detectedMonth=`${m} ${y}`;}parseSheet(data,sn,res);});if(!res.length){showMsg('err','⚠️ No matching data found. Check the format guide below.');return;}applyImport(res,detectedMonth);showMsg('ok',`✅ Imported ${res.length} data points from "${fname}" → ${currentMonth}`);}
 
-// ── Parse Sheet ──
 function parseSheet(rows,sheetName,result){const sLow=sheetName.toLowerCase();let secHint=sLow.includes('build')?'build':sLow.includes('edit')?'edit':null;let headerRow=-1,colMap={},typeCol=-1;for(let r=0;r<Math.min(rows.length,15);r++){const row=rows[r];let found=0;MEMBERS.forEach(m=>{row.forEach((cell,ci)=>{if(String(cell).trim().toLowerCase()===m.toLowerCase()){colMap[m]=ci;found++;}});});if(found>=2){headerRow=r;row.forEach((cell,ci)=>{const v=String(cell).trim().toLowerCase();if(v==='type'||v==='page type')typeCol=ci;});if(typeCol===-1)typeCol=0;break;}}if(headerRow===-1||Object.keys(colMap).length<2)return;let currentSec=secHint||'build';for(let r=headerRow+1;r<rows.length;r++){const row=rows[r];if(!row||!row.length)continue;const typeVal=String(row[typeCol]||'').trim();if(!typeVal)continue;const tvLow=typeVal.toLowerCase();if(tvLow.includes('build')){currentSec='build';continue;}if(tvLow.includes('edit')){currentSec='edit';continue;}if(tvLow.includes('total')||tvLow.includes('hour'))continue;let type='';if(tvLow.includes('complex'))type='Complex';else if(tvLow.includes('moderate')||tvLow.includes('modrate'))type='Moderate';else if(tvLow.includes('simple'))type='Simple';else type=typeVal;MEMBERS.forEach(member=>{if(colMap[member]===undefined)return;const v=row[colMap[member]];const pages=parseFloat(String(v||'0').replace(/[^0-9.]/g,''))||0;if(pages===0)return;const rate=currentSec==='build'?BUILD_RATES[type]:EDIT_RATES[type];const hrs=rate?+(pages*rate).toFixed(2):pages;result.push({person:member,sec:currentSec,type,pages,hrs});});}}
-async function applyImport(result,detectedMonth){let monthKey=detectedMonth||getEntryKey();if(!DB[monthKey])DB[monthKey]=emptyMonth();MEMBERS.forEach(p=>{if(!DB[monthKey][p])DB[monthKey][p]=emptyPerson();FIXED_BUILD.forEach(t=>{DB[monthKey][p].build[t]=0;});FIXED_EDIT.forEach(t=>{DB[monthKey][p].edit[t]=0;});});result.forEach(({person,sec,type,pages})=>{if(!MEMBERS.includes(person))return;const pd=DB[monthKey][person];const fixed=sec==='build'?FIXED_BUILD:FIXED_EDIT;if(fixed.includes(type))pd[sec][type]=pages;else pd[sec].extra.push({label:type,pages,hrs:pages});});await persistDB();currentMonth=monthKey;rebuildMonthSelect();renderDashboard();buildEntryPanel();}
+
+// ── FIX: clear extra arrays before every import so stale rows never accumulate ──
+async function applyImport(result,detectedMonth){
+  let monthKey=detectedMonth||getEntryKey();
+  if(!DB[monthKey])DB[monthKey]=emptyMonth();
+  MEMBERS.forEach(p=>{
+    if(!DB[monthKey][p])DB[monthKey][p]=emptyPerson();
+    FIXED_BUILD.forEach(t=>{DB[monthKey][p].build[t]=0;});
+    FIXED_EDIT.forEach(t=>{DB[monthKey][p].edit[t]=0;});
+    // Clear extra arrays so old rows don't persist across sync cycles
+    DB[monthKey][p].build.extra=[];
+    DB[monthKey][p].edit.extra=[];
+  });
+  result.forEach(({person,sec,type,pages})=>{
+    if(!MEMBERS.includes(person))return;
+    const pd=DB[monthKey][person];
+    const fixed=sec==='build'?FIXED_BUILD:FIXED_EDIT;
+    if(fixed.includes(type))pd[sec][type]=pages;
+    else pd[sec].extra.push({label:type,pages,hrs:pages});
+  });
+  await persistDB();
+  currentMonth=monthKey;
+  rebuildMonthSelect();
+  renderDashboard();
+  buildEntryPanel();
+}
 
 // ── Month Select ──
 function rebuildMonthSelect(){
@@ -540,10 +633,16 @@ function rebuildMonthSelect(){
     if(k===currentMonth)o.selected=true;
     sel.appendChild(o);
   });
+  updateExportMonthLabels();
 }
-function switchMonth(){currentMonth=document.getElementById('monthSelect').value;renderDashboard();}
+function switchMonth(){currentMonth=document.getElementById('monthSelect').value;updateExportMonthLabels();renderDashboard();}
 function getEntryKey(){return`${document.getElementById('entryMonth').value} ${document.getElementById('entryYear').value}`;}
 function onEntryMonthChange(){buildEntryPanel();}
+function updateExportMonthLabels(){
+  document.getElementById('exportMonthLabel').textContent=currentMonth;
+  const el2=document.getElementById('entryExportMonthLabel');
+  if(el2)el2.textContent=currentMonth;
+}
 
 // ── KPI ──
 function renderKPI(){
@@ -868,18 +967,271 @@ async function saveAllData(){
 }
 function showMsg(type,msg){document.getElementById('importOk').style.display='none';document.getElementById('importErr').style.display='none';const el=document.getElementById(type==='ok'?'importOk':'importErr');el.textContent=msg;el.style.display='block';if(type==='ok')setTimeout(()=>{el.style.display='none';},6000);}
 
+// ── EXPORT DROPDOWN TOGGLES ──
+function toggleExportDropdown(){
+  const btn=document.getElementById('hdrExportBtn');
+  const dd=document.getElementById('hdrExportDropdown');
+  const open=dd.classList.toggle('show');
+  btn.classList.toggle('open',open);
+  if(open){document.addEventListener('click',closeExportOnOutside,{once:true});}
+}
+function closeExportOnOutside(e){
+  const wrap=document.getElementById('hdrExportWrap');
+  if(!wrap.contains(e.target)){document.getElementById('hdrExportDropdown').classList.remove('show');document.getElementById('hdrExportBtn').classList.remove('open');}
+}
+function toggleEntryExportDropdown(){
+  const btn=document.getElementById('entryExportBtn');
+  const dd=document.getElementById('entryExportDropdown');
+  const open=dd.classList.toggle('show');
+  btn.classList.toggle('open',open);
+  if(open){document.addEventListener('click',closeEntryExportOnOutside,{once:true});}
+}
+function closeEntryExportOnOutside(e){
+  const wrap=document.getElementById('entryExportWrap');
+  if(!wrap.contains(e.target)){document.getElementById('entryExportDropdown').classList.remove('show');document.getElementById('entryExportBtn').classList.remove('open');}
+}
+function closeAllExportDropdowns(){
+  document.getElementById('hdrExportDropdown').classList.remove('show');
+  document.getElementById('hdrExportBtn').classList.remove('open');
+  document.getElementById('entryExportDropdown').classList.remove('show');
+  document.getElementById('entryExportBtn').classList.remove('open');
+}
+
+// ── EXPORT EXCEL (.csv) ──
+function exportExcel(){
+  closeAllExportDropdowns();
+  const mo = currentMonth;
+  const rows = [];
+  rows.push(['Work Estimation Dashboard — Export']);
+  rows.push(['Month', mo]);
+  rows.push(['Exported At', new Date().toLocaleString()]);
+  rows.push([]);
+  rows.push(['=== PAGE BUILD — DETAILED DATA ===']);
+  rows.push(['Person', 'Type', 'Rate (hrs/page)', 'Pages', 'Calculated Hours']);
+  MEMBERS.forEach(m => {
+    const pd = getP(m, mo);
+    FIXED_BUILD.forEach(type => {
+      const pages = +(pd.build[type] || 0);
+      const rate  = BUILD_RATES[type];
+      const hrs   = +(pages * rate).toFixed(2);
+      rows.push([m, type, rate, pages, hrs]);
+    });
+    (pd.build.extra || []).forEach(ex => {
+      rows.push([m, ex.label || 'Custom', 'manual', ex.pages || 0, ex.hrs || 0]);
+    });
+    rows.push([m, 'SUBTOTAL', '', '', calcBuild(m, mo)]);
+    rows.push([]);
+  });
+  rows.push(['TOTAL BUILD PAGES', calcTotalBuildPages(mo)]);
+  rows.push([]);
+  rows.push(['=== PAGE EDIT — DETAILED DATA ===']);
+  rows.push(['Person', 'Type', 'Rate (hrs/page)', 'Pages', 'Calculated Hours']);
+  MEMBERS.forEach(m => {
+    const pd = getP(m, mo);
+    FIXED_EDIT.forEach(type => {
+      const pages = +(pd.edit[type] || 0);
+      const rate  = EDIT_RATES[type];
+      const hrs   = +(pages * rate).toFixed(2);
+      rows.push([m, type, rate, pages, hrs]);
+    });
+    (pd.edit.extra || []).forEach(ex => {
+      rows.push([m, ex.label || 'Custom', 'manual', ex.pages || 0, ex.hrs || 0]);
+    });
+    rows.push([m, 'SUBTOTAL', '', '', calcEdit(m, mo)]);
+    rows.push([]);
+  });
+  rows.push(['TOTAL EDIT PAGES', calcTotalEditPages(mo)]);
+  rows.push([]);
+  rows.push(['=== COLUMN CHART DATA — Build Hours per Person ===']);
+  rows.push(['Person', 'Build Hours']);
+  MEMBERS.forEach(m => { rows.push([m, calcBuild(m, mo)]); });
+  rows.push([]);
+  const editTotal = MEMBERS.reduce((s,m) => s + calcEdit(m, mo), 0);
+  rows.push(['=== PIE CHART DATA — Edit Hours Distribution ===']);
+  rows.push(['Person', 'Edit Hours', 'Percentage (%)']);
+  MEMBERS.forEach(m => {
+    const eh = calcEdit(m, mo);
+    const pct = editTotal > 0 ? +((eh / editTotal) * 100).toFixed(1) : 0;
+    rows.push([m, eh, pct]);
+  });
+  rows.push([]);
+  rows.push(['=== SUMMARY — All Types Expanded ===']);
+  rows.push(['Person', 'Section', 'Type', 'Rate (hrs/page)', 'Pages', 'Calc. Hours', 'Total Hours']);
+  MEMBERS.forEach(m => {
+    const pd = getP(m, mo);
+    const total = calcTotal(m, mo);
+    FIXED_BUILD.forEach((type, i) => {
+      const pages = +(pd.build[type] || 0);
+      const rate  = BUILD_RATES[type];
+      const hrs   = +(pages * rate).toFixed(2);
+      rows.push([m, 'Build', type, rate, pages, hrs, i === 0 ? total : '']);
+    });
+    (pd.build.extra || []).forEach(ex => {
+      rows.push([m, 'Build', ex.label || 'Custom', 'manual', ex.pages || 0, ex.hrs || 0, '']);
+    });
+    FIXED_EDIT.forEach(type => {
+      const pages = +(pd.edit[type] || 0);
+      const rate  = EDIT_RATES[type];
+      const hrs   = +(pages * rate).toFixed(2);
+      rows.push([m, 'Edit', type, rate, pages, hrs, '']);
+    });
+    (pd.edit.extra || []).forEach(ex => {
+      rows.push([m, 'Edit', ex.label || 'Custom', 'manual', ex.pages || 0, ex.hrs || 0, '']);
+    });
+    rows.push([]);
+  });
+  rows.push(['=== ESTIMATION RATES (FIXED) ===']);
+  rows.push(['Type', 'Section', 'Rate (hrs/page)']);
+  FIXED_BUILD.forEach(t => rows.push([t, 'Page Build', BUILD_RATES[t]]));
+  FIXED_EDIT.forEach(t  => rows.push([t, 'Page Edit',  EDIT_RATES[t]]));
+  const csvContent = rows.map(r =>
+    r.map(cell => {
+      const s = String(cell == null ? '' : cell);
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? `"${s.replace(/"/g, '""')}"`
+        : s;
+    }).join(',')
+  ).join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`Work_Estimation_${mo.replace(' ','_')}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+// ── EXPORT PDF ──
+function exportPDF(){
+  closeAllExportDropdowns();
+  const style = document.createElement('style');
+  style.id = '__pdf_print_style';
+  style.textContent = `
+    @media print {
+      @page { margin: 12mm; size: A3 landscape; }
+      header { position: relative !important; box-shadow: none !important; }
+      .export-wrap, #entryExportWrap { display: none !important; }
+      .theme-btn { display: none !important; }
+      .hdr-right { flex-wrap: nowrap; }
+      .fb-config-banner { display: none !important; }
+      .del-overlay { display: none !important; }
+      .chart-inner { height: 220px !important; }
+      .kpi:hover { transform: none !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+  `;
+  document.head.appendChild(style);
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => { const s=document.getElementById('__pdf_print_style');if(s)s.remove(); }, 1000);
+  }, 300);
+}
+
+// ── EXPORT PPT ──
+async function exportPPT(){
+  closeAllExportDropdowns();
+  const mo = currentMonth;
+  if(typeof PptxGenJS === 'undefined'){alert('PPT library not loaded. Please check your internet connection and try again.');return;}
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';
+  const PURPLE='35297F',PINK='961789',WHITE='FFFFFF',LIGHT='F5F2FF',MUTED='6B5BAE';
+  const palette=['35297F','4A268A','5B2C8E','7A1F8C','961789','6B2191','3E2D85','812090','441E87','8E1A8A'];
+  const memberColors=MEMBERS.map((m,i)=>palette[i%palette.length]);
+  function addHeader(slide,title){
+    slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.65,fill:{type:'solid',color:PURPLE}});
+    slide.addText('Work Estimation Dashboard',{x:0.2,y:0.05,w:6,h:0.55,fontSize:13,bold:true,color:WHITE,fontFace:'Calibri'});
+    slide.addText(mo,{x:6.3,y:0.05,w:3,h:0.55,fontSize:11,color:'C9BFFF',fontFace:'Calibri',align:'center'});
+    slide.addText(title,{x:0.2,y:0.75,w:12.9,h:0.45,fontSize:16,bold:true,color:PURPLE,fontFace:'Calibri'});
+  }
+  const s1=pptx.addSlide();
+  s1.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:'100%',fill:{type:'solid',color:PURPLE}});
+  s1.addShape(pptx.ShapeType.rect,{x:0,y:5.8,w:'100%',h:1.7,fill:{type:'solid',color:PINK}});
+  s1.addText('Work Estimation Dashboard',{x:0.5,y:1.5,w:12.3,h:1.2,fontSize:36,bold:true,color:WHITE,fontFace:'Calibri',align:'center'});
+  s1.addText('Page Build & Edit Tracker',{x:0.5,y:2.8,w:12.3,h:0.6,fontSize:18,color:'C9BFFF',fontFace:'Calibri',align:'center'});
+  s1.addText(mo,{x:0.5,y:3.6,w:12.3,h:0.55,fontSize:22,bold:true,color:WHITE,fontFace:'Calibri',align:'center'});
+  s1.addText(`Generated: ${new Date().toLocaleDateString()}`,{x:0.5,y:6,w:12.3,h:0.4,fontSize:11,color:WHITE,fontFace:'Calibri',align:'center'});
+  const s2=pptx.addSlide();
+  s2.background={color:'F8F7FF'};
+  addHeader(s2,'Total Hours per Team Member');
+  const cardW=2.0,cardH=1.4;
+  const totalCols=Math.min(MEMBERS.length,5);
+  const totalStartX=(13.33-totalCols*(cardW+0.2))/2;
+  MEMBERS.forEach((m,i)=>{
+    const bHrs=calcBuild(m,mo),eHrs=calcEdit(m,mo),tot=+(bHrs+eHrs).toFixed(2);
+    const col=memberColors[i],cx=totalStartX+i*(cardW+0.2),cy=1.4;
+    s2.addShape(pptx.ShapeType.rect,{x:cx,y:cy,w:cardW,h:cardH,fill:{type:'solid',color:WHITE},line:{color:'D0C8FF',width:1},rectRadius:0.08});
+    s2.addShape(pptx.ShapeType.rect,{x:cx,y:cy,w:cardW,h:0.07,fill:{type:'solid',color:col}});
+    s2.addText(m,{x:cx,y:cy+0.12,w:cardW,h:0.3,fontSize:10,bold:true,color:MUTED,fontFace:'Calibri',align:'center'});
+    s2.addText(`${tot} hrs`,{x:cx,y:cy+0.42,w:cardW,h:0.5,fontSize:20,bold:true,color:col,fontFace:'Calibri',align:'center'});
+    s2.addText(`Build: ${bHrs}  |  Edit: ${eHrs}`,{x:cx,y:cy+0.95,w:cardW,h:0.3,fontSize:9,color:MUTED,fontFace:'Calibri',align:'center'});
+  });
+  const grandTotal=MEMBERS.reduce((s,m)=>s+calcTotal(m,mo),0).toFixed(2);
+  s2.addShape(pptx.ShapeType.rect,{x:0.3,y:3.1,w:12.73,h:0.55,fill:{type:'solid',color:'EDEAFF'},line:{color:'D0C8FF',width:1}});
+  s2.addText(`Grand Total — All Members: ${grandTotal} hrs  (${mo})`,{x:0.3,y:3.1,w:12.73,h:0.55,fontSize:13,bold:true,color:PURPLE,fontFace:'Calibri',align:'center'});
+  let lx=0.3;
+  s2.addText('Members:',{x:lx,y:3.85,w:1.1,h:0.3,fontSize:9,color:MUTED,fontFace:'Calibri'});
+  lx+=1.15;
+  MEMBERS.forEach((m,i)=>{
+    s2.addShape(pptx.ShapeType.rect,{x:lx,y:3.93,w:0.14,h:0.14,fill:{type:'solid',color:memberColors[i]}});
+    s2.addText(m,{x:lx+0.18,y:3.85,w:1.5,h:0.3,fontSize:9,color:MUTED,fontFace:'Calibri'});
+    lx+=1.7;
+  });
+  const s3=pptx.addSlide();
+  s3.background={color:'F8F7FF'};
+  addHeader(s3,'Page Build — Calculated Hours per Person');
+  const buildCanvas=document.getElementById('buildChart');
+  let buildImgData=null;
+  try{buildImgData=buildCanvas.toDataURL('image/png');}catch(e){}
+  if(buildImgData){s3.addImage({data:buildImgData,x:0.5,y:1.3,w:8.5,h:4.5});}
+  const buildData=MEMBERS.map(m=>({name:m,hrs:calcBuild(m,mo)}));
+  buildData.sort((a,b)=>b.hrs-a.hrs);
+  let ty=1.4;
+  s3.addText('Build Hours',{x:9.3,y:ty-0.3,w:3.5,h:0.4,fontSize:11,bold:true,color:PURPLE,fontFace:'Calibri'});
+  buildData.forEach((d,i)=>{
+    const col=memberColors[MEMBERS.indexOf(d.name)];
+    s3.addShape(pptx.ShapeType.rect,{x:9.3,y:ty+0.05,w:0.12,h:0.22,fill:{type:'solid',color:col}});
+    s3.addText(d.name,{x:9.46,y:ty,w:2,h:0.32,fontSize:10,color:'333333',fontFace:'Calibri'});
+    s3.addText(`${d.hrs} hrs`,{x:11.5,y:ty,w:1.3,h:0.32,fontSize:10,bold:true,color:col,fontFace:'Calibri',align:'right'});
+    ty+=0.38;
+  });
+  s3.addShape(pptx.ShapeType.rect,{x:9.3,y:ty+0.15,w:3.5,h:0.5,fill:{type:'solid',color:'EDEAFF'},line:{color:'D0C8FF',width:1}});
+  s3.addText(`Total Build Pages: ${calcTotalBuildPages(mo)}`,{x:9.3,y:ty+0.15,w:3.5,h:0.5,fontSize:10,bold:true,color:PURPLE,fontFace:'Calibri',align:'center'});
+  const s4=pptx.addSlide();
+  s4.background={color:'F8F7FF'};
+  addHeader(s4,'Page Edit — Hours Distribution');
+  const editCanvas=document.getElementById('editChart');
+  let editImgData=null;
+  try{editImgData=editCanvas.toDataURL('image/png');}catch(e){}
+  if(editImgData){s4.addImage({data:editImgData,x:0.5,y:1.3,w:6,h:5});}
+  const editDataArr=MEMBERS.map(m=>({name:m,hrs:calcEdit(m,mo)}));
+  const editTotalVal=editDataArr.reduce((s,d)=>s+d.hrs,0);
+  editDataArr.sort((a,b)=>b.hrs-a.hrs);
+  let ey=1.4;
+  s4.addText('Edit Hours',{x:7.0,y:ey-0.3,w:5.8,h:0.4,fontSize:11,bold:true,color:PINK,fontFace:'Calibri'});
+  s4.addText('Member',{x:7.0,y:ey,w:2.5,h:0.3,fontSize:9,bold:true,color:MUTED,fontFace:'Calibri'});
+  s4.addText('Hours',{x:9.5,y:ey,w:1.3,h:0.3,fontSize:9,bold:true,color:MUTED,fontFace:'Calibri',align:'center'});
+  s4.addText('%',{x:10.9,y:ey,w:1.5,h:0.3,fontSize:9,bold:true,color:MUTED,fontFace:'Calibri',align:'center'});
+  ey+=0.36;
+  editDataArr.forEach(d=>{
+    const col=memberColors[MEMBERS.indexOf(d.name)];
+    const pct=editTotalVal>0?((d.hrs/editTotalVal)*100).toFixed(1):0;
+    s4.addShape(pptx.ShapeType.rect,{x:7.0,y:ey+0.07,w:0.12,h:0.2,fill:{type:'solid',color:col}});
+    s4.addText(d.name,{x:7.16,y:ey,w:2.3,h:0.32,fontSize:10,color:'333333',fontFace:'Calibri'});
+    s4.addText(`${d.hrs}`,{x:9.5,y:ey,w:1.3,h:0.32,fontSize:10,bold:true,color:col,fontFace:'Calibri',align:'center'});
+    s4.addText(`${pct}%`,{x:10.9,y:ey,w:1.5,h:0.32,fontSize:10,color:MUTED,fontFace:'Calibri',align:'center'});
+    ey+=0.38;
+  });
+  s4.addShape(pptx.ShapeType.rect,{x:7.0,y:ey+0.2,w:5.3,h:0.5,fill:{type:'solid',color:'FCE8FF'},line:{color:'E5BADC',width:1}});
+  s4.addText(`Total Edit Pages: ${calcTotalEditPages(mo)}  |  Total Edit Hrs: ${editTotalVal.toFixed(2)}`,{x:7.0,y:ey+0.2,w:5.3,h:0.5,fontSize:10,bold:true,color:PINK,fontFace:'Calibri',align:'center'});
+  pptx.writeFile({fileName:`Work_Estimation_${mo.replace(' ','_')}.pptx`});
+}
+
 // ── Render + Init ──
 function renderDashboard(){renderKPI();renderCharts();renderTable();}
 
 async function init(){
   document.getElementById('kpiRow').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">⏳ Loading data…</div>`;
-
-  // Load saved members
   const saved=loadMembersState();
   MEMBERS=saved||[...BASE_MEMBERS];
   activePerson=MEMBERS.length>0?MEMBERS[0]:BASE_MEMBERS[0];
-
-  // Try Firebase
   const savedCfg=loadFbConfig();
   if(savedCfg){
     const ok=window.initFirebase(savedCfg);
@@ -889,35 +1241,15 @@ async function init(){
       window.fbSubscribe(onRemoteChange);
     }
   }
-
-  // Load DB (Firebase → localStorage → seedDB)
   DB=await loadDB();
-
-  // ── CHANGE 4: Ensure the default month always exists in DB.
-  //    If the loaded data (from Firebase or localStorage) doesn't have
-  //    "January <currentYear>", create it as an empty month so the
-  //    dashboard never lands on a blank or missing key. ──
-  if(!DB[DEFAULT_MONTH]){
-    DB[DEFAULT_MONTH]=emptyMonth();
-  }
-
-  // ── CHANGE 5: currentMonth is already set to DEFAULT_MONTH at declaration
-  //    time. But if DB was loaded from storage and that key existed, we
-  //    honour it. If it doesn't contain DEFAULT_MONTH, we reset to it. ──
-  if(!DB[currentMonth]){
-    currentMonth=DEFAULT_MONTH;
-  }
-
+  if(!DB[DEFAULT_MONTH]){DB[DEFAULT_MONTH]=emptyMonth();}
+  if(!DB[currentMonth]){currentMonth=DEFAULT_MONTH;}
   rebuildMonthSelect();
   renderDashboard();
-
-  // ── CHANGE 6: Entry form always defaults to January of the current year,
-  //    not the real current month.  This keeps the entry form in sync with
-  //    what the dashboard is showing on first open. ──
-  document.getElementById('entryMonth').value = 'January';
-  document.getElementById('entryYear').value  = _CUR_YEAR;
+  updateExportMonthLabels();
+  document.getElementById('entryMonth').value='January';
+  document.getElementById('entryYear').value=_CUR_YEAR;
   buildEntryPanel();
-
   if(!('showOpenFilePicker' in window)){
     document.getElementById('apiWarning').style.display='block';
     document.getElementById('connectBtn').style.display='none';
