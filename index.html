@@ -635,7 +635,7 @@ function processFile(file){const r=new FileReader();r.onload=function(e){try{con
 function importWorkbook(wb,fname){const res=[];let detectedMonth=null;wb.SheetNames.forEach(sn=>{const ws=wb.Sheets[sn];const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});if(!detectedMonth){const m=String(data[1]?.[4]||'').trim();const y=String(data[1]?.[7]||'').trim();if(MONTH_NAMES.includes(m)&&+y>2000)detectedMonth=`${m} ${y}`;}parseSheet(data,sn,res);});if(!res.length){showMsg('err','⚠️ No matching data found. Check the format guide below.');return;}applyImport(res,detectedMonth);showMsg('ok',`✅ Imported ${res.length} data points from "${fname}" → ${currentMonth}`);}
 
 function parseSheet(rows,sheetName,result){const sLow=sheetName.toLowerCase();let secHint=sLow.includes('build')?'build':sLow.includes('edit')?'edit':null;let headerRow=-1,colMap={},typeCol=-1;for(let r=0;r<Math.min(rows.length,15);r++){const row=rows[r];let found=0;MEMBERS.forEach(m=>{row.forEach((cell,ci)=>{if(String(cell).trim().toLowerCase()===m.toLowerCase()){colMap[m]=ci;found++;}});});if(found>=2){headerRow=r;row.forEach((cell,ci)=>{const v=String(cell).trim().toLowerCase();if(v==='type'||v==='page type')typeCol=ci;});if(typeCol===-1)typeCol=0;break;}}if(headerRow===-1||Object.keys(colMap).length<2)return;let currentSec=secHint||'build';for(let r=headerRow+1;r<rows.length;r++){const row=rows[r];if(!row||!row.length)continue;const typeVal=String(row[typeCol]||'').trim();if(!typeVal)continue;const tvLow=typeVal.toLowerCase();if(tvLow.includes('build')){currentSec='build';continue;}if(tvLow.includes('edit')){currentSec='edit';continue;}if(tvLow.includes('total')||tvLow.includes('hour'))continue;let type='';if(tvLow.includes('complex'))type='Complex';else if(tvLow.includes('moderate')||tvLow.includes('modrate'))type='Moderate';else if(tvLow.includes('simple'))type='Simple';else type=typeVal;MEMBERS.forEach(member=>{if(colMap[member]===undefined)return;const v=row[colMap[member]];const pages=parseFloat(String(v||'0').replace(/[^0-9.]/g,''))||0;if(pages===0)return;const rate=currentSec==='build'?BUILD_RATES[type]:EDIT_RATES[type];const hrs=rate?+(pages*rate).toFixed(2):pages;result.push({person:member,sec:currentSec,type,pages,hrs});});}}
-async function applyImport(result,detectedMonth){let monthKey=detectedMonth||getEntryKey();if(!DB[monthKey])DB[monthKey]=emptyMonth();MEMBERS.forEach(p=>{if(!DB[monthKey][p])DB[monthKey][p]=emptyPerson();FIXED_BUILD.forEach(t=>{DB[monthKey][p].build[t]=0;});FIXED_EDIT.forEach(t=>{DB[monthKey][p].edit[t]=0;});});result.forEach(({person,sec,type,pages})=>{if(!MEMBERS.includes(person))return;const pd=DB[monthKey][person];const fixed=sec==='build'?FIXED_BUILD:FIXED_EDIT;if(fixed.includes(type))pd[sec][type]=pages;else pd[sec].extra.push({label:type,pages,hrs:pages});});await persistDB();currentMonth=monthKey;rebuildMonthSelect();renderDashboard();buildEntryPanel();}
+async function applyImport(result,detectedMonth){let monthKey=detectedMonth||getEntryKey();if(!DB[monthKey])DB[monthKey]=emptyMonth();MEMBERS.forEach(p=>{if(!DB[monthKey][p])DB[monthKey][p]=emptyPerson();FIXED_BUILD.forEach(t=>{DB[monthKey][p].build[t]=0;});FIXED_EDIT.forEach(t=>{DB[monthKey][p].edit[t]=0;});DB[monthKey][p].build.extra=[];DB[monthKey][p].edit.extra=[];});result.forEach(({person,sec,type,pages})=>{if(!MEMBERS.includes(person))return;const pd=DB[monthKey][person];const fixed=sec==='build'?FIXED_BUILD:FIXED_EDIT;if(fixed.includes(type))pd[sec][type]=pages;else pd[sec].extra.push({label:type,pages,hrs:pages});});await persistDB();currentMonth=monthKey;rebuildMonthSelect();renderDashboard();buildEntryPanel();}
 
 // ── Month Select ──
 function rebuildMonthSelect(){
@@ -1543,6 +1543,25 @@ async function init(){
   }
 
   DB=await loadDB();
+
+  // ── PURGE STALE EXTRA ROWS ──
+  // Extra rows are manual add-ons only. If stale extras crept in from
+  // a previous bad import or save (e.g. March 2026 Step 2-7 issue),
+  // this wipes them from every month/member in the stored DB so they
+  // never auto-appear in the entry form again.
+  let _extrasPurged = false;
+  Object.keys(DB).forEach(mo => {
+    MEMBERS.concat(Object.keys(DB[mo]||{})).filter((v,i,a)=>a.indexOf(v)===i).forEach(p => {
+      if(!DB[mo][p]) return;
+      if((DB[mo][p].build && (DB[mo][p].build.extra||[]).length > 0) ||
+         (DB[mo][p].edit  && (DB[mo][p].edit.extra ||[]).length > 0)){
+        DB[mo][p].build.extra = [];
+        DB[mo][p].edit.extra  = [];
+        _extrasPurged = true;
+      }
+    });
+  });
+  if(_extrasPurged){ await persistDB(); }
 
   if(!DB[DEFAULT_MONTH]){
     DB[DEFAULT_MONTH]=emptyMonth();
