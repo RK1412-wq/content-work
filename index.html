@@ -50,6 +50,7 @@ h1{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;}
 .sync-dot.pulse{animation:pulse 1.4s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
 
+/* ── EXPORT BUTTON & DROPDOWN ── */
 .export-wrap{position:relative;}
 .export-btn{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.38);color:#fff;padding:6px 14px;border-radius:18px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;display:flex;align-items:center;gap:5px;transition:background .2s;white-space:nowrap;}
 .export-btn:hover{background:rgba(255,255,255,.30);}
@@ -204,7 +205,9 @@ select:focus,input:focus{border-color:var(--green);}
 .save-msg{display:none;background:var(--tag-g);color:var(--green);border:1.5px solid rgba(88,67,212,.28);border-radius:7px;padding:8px 13px;margin-top:10px;font-size:12px;}
 .divider{height:1.5px;background:var(--border);margin:14px 0;}
 
+/* Save & Export row */
 .save-export-row{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.save-export-row .btn-save{margin-top:0;}
 .export-entry-wrap{position:relative;}
 .export-entry-btn{background:var(--surface);color:var(--green);border:1.5px solid var(--green);padding:9px 18px;border-radius:7px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .18s;}
 .export-entry-btn:hover{background:var(--tag-g);}
@@ -232,6 +235,32 @@ select:focus,input:focus{border-color:var(--green);}
 .an{animation:fadeUp .38s ease both;}
 .d1{animation-delay:.04s}.d2{animation-delay:.09s}.d3{animation-delay:.14s}
 
+
+/* ── IMPORT SOURCE ACCORDION ── */
+.import-src-btns{display:flex;gap:10px;margin-bottom:0;}
+.import-src-btn{flex:1;display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:10px;border:2px solid var(--border);background:var(--card);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;text-align:left;}
+.import-src-btn:hover{border-color:var(--green);background:var(--tag-g);}
+.import-src-btn.active{border-color:var(--green);background:var(--tag-g);box-shadow:0 0 0 3px rgba(88,67,212,0.10);}
+.import-src-btn.active-api{border-color:var(--rose);background:var(--ltrose);box-shadow:0 0 0 3px rgba(150,23,137,0.08);}
+.isb-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.isb-icon-excel{background:rgba(88,67,212,0.10);}
+.isb-icon-api{background:rgba(150,23,137,0.10);}
+.isb-text{}
+.isb-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);line-height:1.2;}
+.isb-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.isb-chevron{margin-left:auto;font-size:11px;color:var(--muted);transition:transform .2s;flex-shrink:0;}
+.import-src-btn.active .isb-chevron,.import-src-btn.active-api .isb-chevron{transform:rotate(180deg);color:var(--green);}
+.import-src-btn.active-api .isb-chevron{color:var(--rose);}
+
+.import-panel{display:none;margin-top:14px;animation:fadeUp .22s ease both;}
+.import-panel.show{display:block;}
+
+.api-coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px 20px;background:var(--surface);border:2px dashed var(--border);border-radius:10px;text-align:center;}
+.api-cs-icon{font-size:32px;}
+.api-cs-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);}
+.api-cs-sub{font-size:12px;color:var(--muted);line-height:1.6;max-width:340px;}
+.api-cs-badge{display:inline-flex;align-items:center;gap:5px;background:var(--ltrose);border:1.5px solid rgba(150,23,137,0.25);border-radius:18px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--rose);}
+
 @media(max-width:860px){
   header{padding:11px 13px;flex-direction:column;gap:9px;}
   .main{padding:14px 11px;}
@@ -258,33 +287,18 @@ select:focus,input:focus{border-color:var(--green);}
     <div class="sync-badge"><span class="sync-dot off" id="syncDot"></span><span id="syncLabel">Not syncing</span></div>
     <span class="hdr-lbl">Month:</span>
     <select class="hdr-sel" id="monthSelect" onchange="switchMonth()"></select>
+    <!-- EXPORT DROPDOWN IN HEADER -->
     <div class="export-wrap" id="hdrExportWrap">
       <button class="export-btn" id="hdrExportBtn" onclick="toggleExportDropdown()">
         📤 Export <span class="arrow">▾</span>
       </button>
       <div class="export-dropdown" id="hdrExportDropdown">
         <div class="export-dropdown-header">Export: <span id="exportMonthLabel">—</span></div>
-        <div class="export-item" onclick="exportExcel()">
-          <div class="ei-icon ei-excel">📊</div>
-          <div>
-            <div class="ei-label">Export as Excel (.csv)</div>
-            <div class="ei-sub">All data, charts data, detailed rows</div>
-          </div>
-        </div>
-        <div class="export-divider"></div>
         <div class="export-item" onclick="exportPDF()">
           <div class="ei-icon ei-pdf">📄</div>
           <div>
             <div class="ei-label">Export as PDF</div>
-            <div class="ei-sub">Full page — all details</div>
-          </div>
-        </div>
-        <div class="export-divider"></div>
-        <div class="export-item" onclick="exportPPT()">
-          <div class="ei-icon ei-ppt">📑</div>
-          <div>
-            <div class="ei-label">Export as PPT</div>
-            <div class="ei-sub">Charts + total hours only</div>
+            <div class="ei-sub">Charts + total hours + details</div>
           </div>
         </div>
       </div>
@@ -358,40 +372,74 @@ select:focus,input:focus{border-color:var(--green);}
 
   <!-- AUTO SYNC CARD -->
   <div class="sync-card an d3">
-    <h3>🔄 Excel Auto-Sync</h3>
-    <div class="sync-methods-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
-      <div>
-        <div class="stitle" style="font-size:13px;margin-bottom:8px;"><span class="dot" style="background:var(--green)"></span>Method 1 — Connect &amp; Auto-Sync (Recommended)</div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Connect your Excel file once. The dashboard checks for changes every <strong style="color:var(--text)">5 seconds</strong> and auto-updates all KPIs, charts, and table — no re-upload needed.</p>
-        <div class="sync-row">
-          <button class="btn btn-connect" id="connectBtn" onclick="connectFile()">📂 Connect Excel File</button>
-          <button class="btn btn-disconnect" id="disconnectBtn" style="display:none" onclick="disconnectFile()">✕ Disconnect</button>
-          <div class="sync-status-bar" id="syncStatusBar"><span>No file connected</span></div>
-          <span class="countdown" id="countdown" style="display:none"></span>
+    <h3>🔄 Data Import &amp; Sync</h3>
+
+    <!-- TWO SOURCE BUTTONS -->
+    <div class="import-src-btns">
+      <button class="import-src-btn" id="srcBtnExcel" onclick="toggleImportPanel('excel')">
+        <div class="isb-icon isb-icon-excel">📊</div>
+        <div class="isb-text">
+          <div class="isb-label">Excel Import</div>
+          <div class="isb-sub">Connect or upload .xlsx / .csv files</div>
         </div>
-        <div id="apiWarning" style="display:none;font-size:12px;color:var(--rose);background:var(--tag-r);border-radius:7px;padding:8px 12px;margin-top:6px;border:1px solid rgba(150,23,137,.25);">⚠️ Your browser does not support the File System Access API. Please use Method 2, or open in Chrome / Edge.</div>
+        <span class="isb-chevron">▾</span>
+      </button>
+      <button class="import-src-btn" id="srcBtnApi" onclick="toggleImportPanel('api')">
+        <div class="isb-icon isb-icon-api">🔌</div>
+        <div class="isb-text">
+          <div class="isb-label">App Import</div>
+          <div class="isb-sub">Connect via API connectors</div>
+        </div>
+        <span class="isb-chevron">▾</span>
+      </button>
+    </div>
+
+    <!-- EXCEL PANEL -->
+    <div class="import-panel" id="importPanelExcel">
+      <div class="sync-methods-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;margin-bottom:14px;">
+        <div>
+          <div class="stitle" style="font-size:13px;margin-bottom:8px;"><span class="dot" style="background:var(--green)"></span>Auto-Sync — Connect Once (Recommended)</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">Connect your Excel file once. The dashboard checks for changes every <strong style="color:var(--text)">5 seconds</strong> and auto-updates all KPIs, charts, and table — no re-upload needed.</p>
+          <div class="sync-row">
+            <button class="btn btn-connect" id="connectBtn" onclick="connectFile()">📂 Connect Excel File</button>
+            <button class="btn btn-disconnect" id="disconnectBtn" style="display:none" onclick="disconnectFile()">✕ Disconnect</button>
+            <div class="sync-status-bar" id="syncStatusBar"><span>No file connected</span></div>
+            <span class="countdown" id="countdown" style="display:none"></span>
+          </div>
+          <div id="apiWarning" style="display:none;font-size:12px;color:var(--rose);background:var(--tag-r);border-radius:7px;padding:8px 12px;margin-top:6px;border:1px solid rgba(150,23,137,.25);">⚠️ Your browser does not support the File System Access API. Please use Manual Upload below, or open in Chrome / Edge.</div>
+        </div>
+        <div>
+          <div class="stitle" style="font-size:13px;margin-bottom:8px;"><span class="dot" style="background:var(--rose)"></span>Manual Upload</div>
+          <div class="drop-zone" id="dropZone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            <input type="file" accept=".xlsx,.xls,.csv" onchange="onFileSelect(event)">
+            <div class="drop-icon">📂</div>
+            <div class="drop-text">Click to browse or drag &amp; drop your Excel file</div>
+            <div class="drop-sub">Supports .xlsx, .xls, .csv</div>
+          </div>
+          <div class="import-msg msg-ok" id="importOk"></div>
+          <div class="import-msg msg-err" id="importErr"></div>
+        </div>
       </div>
-      <div>
-        <div class="stitle" style="font-size:13px;margin-bottom:8px;"><span class="dot" style="background:var(--rose)"></span>Method 2 — Manual Upload</div>
-        <div class="drop-zone" id="dropZone" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-          <input type="file" accept=".xlsx,.xls,.csv" onchange="onFileSelect(event)">
-          <div class="drop-icon">📂</div>
-          <div class="drop-text">Click to browse or drag &amp; drop your Excel file</div>
-          <div class="drop-sub">Supports .xlsx, .xls, .csv</div>
+      <div class="fmt-guide">
+        <strong>📋 Expected Excel Format</strong> — column names are flexible, the importer matches by keyword:
+        <div class="fmt-grid">
+          <div class="fmt-col"><b>Page Build Sheet / Section</b><br>Columns: Type | Ramesh | Parivallal | Srinadh | Vigneswari | Krishna<br>Rows: Complex | Moderate | Simple (page counts)</div>
+          <div class="fmt-col"><b>Page Edit Sheet / Section</b><br>Columns: Type | Ramesh | Parivallal | Srinadh | Vigneswari | Krishna<br>Rows: Complex | Moderate | Simple (page counts)</div>
         </div>
-        <div class="import-msg msg-ok" id="importOk"></div>
-        <div class="import-msg msg-err" id="importErr"></div>
+        <div style="margin-top:8px">💡 The importer reads <strong>Month</strong> (E2) and <strong>Year</strong> (H2) cells from the sheet. If not found it uses the Entry form's month.</div>
       </div>
     </div>
-    <div class="divider"></div>
-    <div class="fmt-guide">
-      <strong>📋 Expected Excel Format</strong> — column names are flexible, the importer matches by keyword:
-      <div class="fmt-grid">
-        <div class="fmt-col"><b>Page Build Sheet / Section</b><br>Columns: Type | Ramesh | Parivallal | Srinadh | Vigneswari | Krishna<br>Rows: Complex | Moderate | Simple (page counts)</div>
-        <div class="fmt-col"><b>Page Edit Sheet / Section</b><br>Columns: Type | Ramesh | Parivallal | Srinadh | Vigneswari | Krishna<br>Rows: Complex | Moderate | Simple (page counts)</div>
+
+    <!-- APP IMPORT PANEL (placeholder) -->
+    <div class="import-panel" id="importPanelApi">
+      <div class="api-coming-soon">
+        <div class="api-cs-icon">🔌</div>
+        <div class="api-cs-title">API Connector — Coming Soon</div>
+        <div class="api-cs-sub">Connect directly to your project management tools — Jira, Asana, Monday.com, Notion, and more — to auto-pull page counts without any file upload.</div>
+        <span class="api-cs-badge">🚧 In Development</span>
       </div>
-      <div style="margin-top:8px">💡 The importer reads <strong>Month</strong> (E2) and <strong>Year</strong> (H2) cells from the sheet. If not found it uses the Entry form's month.</div>
     </div>
+
   </div>
 
   <!-- ENTRY PANEL -->
@@ -435,6 +483,7 @@ select:focus,input:focus{border-color:var(--green);}
       <div class="amp-note">💡 <strong>Excel Template:</strong> Downloads a pre-formatted Excel file with all current team members. Share it with the team to fill in page counts and re-import via the sync panel above.</div>
     </div>
     <div id="personForms"></div>
+    <!-- SAVE & EXPORT ROW -->
     <div class="save-export-row">
       <button class="btn btn-save" onclick="saveAllData()">💾 Save &amp; Update Dashboard</button>
       <div class="export-entry-wrap" id="entryExportWrap">
@@ -443,19 +492,9 @@ select:focus,input:focus{border-color:var(--green);}
         </button>
         <div class="export-entry-dropdown" id="entryExportDropdown">
           <div class="export-dropdown-header" style="padding:8px 14px 6px;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B5BAE;border-bottom:1px solid #EDEAFF;">Export: <span id="entryExportMonthLabel">—</span></div>
-          <div class="export-item" onclick="exportExcel()">
-            <div class="ei-icon ei-excel">📊</div>
-            <div><div class="ei-label">Export as Excel (.csv)</div><div class="ei-sub">All data with chart data</div></div>
-          </div>
-          <div class="export-divider"></div>
           <div class="export-item" onclick="exportPDF()">
             <div class="ei-icon ei-pdf">📄</div>
-            <div><div class="ei-label">Export as PDF</div><div class="ei-sub">Full page snapshot</div></div>
-          </div>
-          <div class="export-divider"></div>
-          <div class="export-item" onclick="exportPPT()">
-            <div class="ei-icon ei-ppt">📑</div>
-            <div><div class="ei-label">Export as PPT</div><div class="ei-sub">Charts + total hours</div></div>
+            <div><div class="ei-label">Export as PDF</div><div class="ei-sub">Charts + total hours + details</div></div>
           </div>
         </div>
       </div>
@@ -477,7 +516,7 @@ select:focus,input:focus{border-color:var(--green);}
   </div>
 </div>
 
-<!-- FIREBASE SDK -->
+<!-- ═══════════ FIREBASE SDK ═══════════ -->
 <script type="module">
 import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, onSnapshot }
@@ -492,7 +531,7 @@ window.fbSubscribe=function(callback){if(!window._fbReady)return;if(window._fbUn
 <!-- PptxGenJS for PPT export -->
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js"></script>
 
-<!-- MAIN APP -->
+<!-- ═══════════ MAIN APP ═══════════ -->
 <script>
 const FB_CFG_KEY  = 'wed_fb_config';
 const MEMBERS_KEY = 'wed_members_v2';
@@ -596,32 +635,7 @@ function processFile(file){const r=new FileReader();r.onload=function(e){try{con
 function importWorkbook(wb,fname){const res=[];let detectedMonth=null;wb.SheetNames.forEach(sn=>{const ws=wb.Sheets[sn];const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});if(!detectedMonth){const m=String(data[1]?.[4]||'').trim();const y=String(data[1]?.[7]||'').trim();if(MONTH_NAMES.includes(m)&&+y>2000)detectedMonth=`${m} ${y}`;}parseSheet(data,sn,res);});if(!res.length){showMsg('err','⚠️ No matching data found. Check the format guide below.');return;}applyImport(res,detectedMonth);showMsg('ok',`✅ Imported ${res.length} data points from "${fname}" → ${currentMonth}`);}
 
 function parseSheet(rows,sheetName,result){const sLow=sheetName.toLowerCase();let secHint=sLow.includes('build')?'build':sLow.includes('edit')?'edit':null;let headerRow=-1,colMap={},typeCol=-1;for(let r=0;r<Math.min(rows.length,15);r++){const row=rows[r];let found=0;MEMBERS.forEach(m=>{row.forEach((cell,ci)=>{if(String(cell).trim().toLowerCase()===m.toLowerCase()){colMap[m]=ci;found++;}});});if(found>=2){headerRow=r;row.forEach((cell,ci)=>{const v=String(cell).trim().toLowerCase();if(v==='type'||v==='page type')typeCol=ci;});if(typeCol===-1)typeCol=0;break;}}if(headerRow===-1||Object.keys(colMap).length<2)return;let currentSec=secHint||'build';for(let r=headerRow+1;r<rows.length;r++){const row=rows[r];if(!row||!row.length)continue;const typeVal=String(row[typeCol]||'').trim();if(!typeVal)continue;const tvLow=typeVal.toLowerCase();if(tvLow.includes('build')){currentSec='build';continue;}if(tvLow.includes('edit')){currentSec='edit';continue;}if(tvLow.includes('total')||tvLow.includes('hour'))continue;let type='';if(tvLow.includes('complex'))type='Complex';else if(tvLow.includes('moderate')||tvLow.includes('modrate'))type='Moderate';else if(tvLow.includes('simple'))type='Simple';else type=typeVal;MEMBERS.forEach(member=>{if(colMap[member]===undefined)return;const v=row[colMap[member]];const pages=parseFloat(String(v||'0').replace(/[^0-9.]/g,''))||0;if(pages===0)return;const rate=currentSec==='build'?BUILD_RATES[type]:EDIT_RATES[type];const hrs=rate?+(pages*rate).toFixed(2):pages;result.push({person:member,sec:currentSec,type,pages,hrs});});}}
-
-// ── FIX: clear extra arrays before every import so stale rows never accumulate ──
-async function applyImport(result,detectedMonth){
-  let monthKey=detectedMonth||getEntryKey();
-  if(!DB[monthKey])DB[monthKey]=emptyMonth();
-  MEMBERS.forEach(p=>{
-    if(!DB[monthKey][p])DB[monthKey][p]=emptyPerson();
-    FIXED_BUILD.forEach(t=>{DB[monthKey][p].build[t]=0;});
-    FIXED_EDIT.forEach(t=>{DB[monthKey][p].edit[t]=0;});
-    // Clear extra arrays so old rows don't persist across sync cycles
-    DB[monthKey][p].build.extra=[];
-    DB[monthKey][p].edit.extra=[];
-  });
-  result.forEach(({person,sec,type,pages})=>{
-    if(!MEMBERS.includes(person))return;
-    const pd=DB[monthKey][person];
-    const fixed=sec==='build'?FIXED_BUILD:FIXED_EDIT;
-    if(fixed.includes(type))pd[sec][type]=pages;
-    else pd[sec].extra.push({label:type,pages,hrs:pages});
-  });
-  await persistDB();
-  currentMonth=monthKey;
-  rebuildMonthSelect();
-  renderDashboard();
-  buildEntryPanel();
-}
+async function applyImport(result,detectedMonth){let monthKey=detectedMonth||getEntryKey();if(!DB[monthKey])DB[monthKey]=emptyMonth();MEMBERS.forEach(p=>{if(!DB[monthKey][p])DB[monthKey][p]=emptyPerson();FIXED_BUILD.forEach(t=>{DB[monthKey][p].build[t]=0;});FIXED_EDIT.forEach(t=>{DB[monthKey][p].edit[t]=0;});});result.forEach(({person,sec,type,pages})=>{if(!MEMBERS.includes(person))return;const pd=DB[monthKey][person];const fixed=sec==='build'?FIXED_BUILD:FIXED_EDIT;if(fixed.includes(type))pd[sec][type]=pages;else pd[sec].extra.push({label:type,pages,hrs:pages});});await persistDB();currentMonth=monthKey;rebuildMonthSelect();renderDashboard();buildEntryPanel();}
 
 // ── Month Select ──
 function rebuildMonthSelect(){
@@ -967,28 +981,74 @@ async function saveAllData(){
 }
 function showMsg(type,msg){document.getElementById('importOk').style.display='none';document.getElementById('importErr').style.display='none';const el=document.getElementById(type==='ok'?'importOk':'importErr');el.textContent=msg;el.style.display='block';if(type==='ok')setTimeout(()=>{el.style.display='none';},6000);}
 
+// ═══════════════════════════════════════════════════════════
+// ── IMPORT PANEL ACCORDION ──
+function toggleImportPanel(source){
+  const panelExcel = document.getElementById('importPanelExcel');
+  const panelApi   = document.getElementById('importPanelApi');
+  const btnExcel   = document.getElementById('srcBtnExcel');
+  const btnApi     = document.getElementById('srcBtnApi');
+
+  if(source === 'excel'){
+    const isOpen = panelExcel.classList.contains('show');
+    // Close both first
+    panelExcel.classList.remove('show');
+    panelApi.classList.remove('show');
+    btnExcel.classList.remove('active');
+    btnApi.classList.remove('active','active-api');
+    // Toggle excel open
+    if(!isOpen){
+      panelExcel.classList.add('show');
+      btnExcel.classList.add('active');
+    }
+  } else {
+    const isOpen = panelApi.classList.contains('show');
+    // Close both first
+    panelExcel.classList.remove('show');
+    panelApi.classList.remove('show');
+    btnExcel.classList.remove('active');
+    btnApi.classList.remove('active','active-api');
+    // Toggle api open
+    if(!isOpen){
+      panelApi.classList.add('show');
+      btnApi.classList.add('active-api');
+    }
+  }
+}
+
 // ── EXPORT DROPDOWN TOGGLES ──
+// ═══════════════════════════════════════════════════════════
 function toggleExportDropdown(){
   const btn=document.getElementById('hdrExportBtn');
   const dd=document.getElementById('hdrExportDropdown');
   const open=dd.classList.toggle('show');
   btn.classList.toggle('open',open);
-  if(open){document.addEventListener('click',closeExportOnOutside,{once:true});}
+  if(open){
+    document.addEventListener('click',closeExportOnOutside,{once:true});
+  }
 }
 function closeExportOnOutside(e){
   const wrap=document.getElementById('hdrExportWrap');
-  if(!wrap.contains(e.target)){document.getElementById('hdrExportDropdown').classList.remove('show');document.getElementById('hdrExportBtn').classList.remove('open');}
+  if(!wrap.contains(e.target)){
+    document.getElementById('hdrExportDropdown').classList.remove('show');
+    document.getElementById('hdrExportBtn').classList.remove('open');
+  }
 }
 function toggleEntryExportDropdown(){
   const btn=document.getElementById('entryExportBtn');
   const dd=document.getElementById('entryExportDropdown');
   const open=dd.classList.toggle('show');
   btn.classList.toggle('open',open);
-  if(open){document.addEventListener('click',closeEntryExportOnOutside,{once:true});}
+  if(open){
+    document.addEventListener('click',closeEntryExportOnOutside,{once:true});
+  }
 }
 function closeEntryExportOnOutside(e){
   const wrap=document.getElementById('entryExportWrap');
-  if(!wrap.contains(e.target)){document.getElementById('entryExportDropdown').classList.remove('show');document.getElementById('entryExportBtn').classList.remove('open');}
+  if(!wrap.contains(e.target)){
+    document.getElementById('entryExportDropdown').classList.remove('show');
+    document.getElementById('entryExportBtn').classList.remove('open');
+  }
 }
 function closeAllExportDropdowns(){
   document.getElementById('hdrExportDropdown').classList.remove('show');
@@ -997,17 +1057,26 @@ function closeAllExportDropdowns(){
   document.getElementById('entryExportBtn').classList.remove('open');
 }
 
+// ═══════════════════════════════════════════════════════════
 // ── EXPORT EXCEL (.csv) ──
+// Exports all data for currentMonth: member × type detail,
+// build chart data, edit chart data, plus summary totals.
+// ═══════════════════════════════════════════════════════════
 function exportExcel(){
   closeAllExportDropdowns();
   const mo = currentMonth;
   const rows = [];
+
+  // ── Title block ──
   rows.push(['Work Estimation Dashboard — Export']);
   rows.push(['Month', mo]);
   rows.push(['Exported At', new Date().toLocaleString()]);
   rows.push([]);
+
+  // ── Section 1: Detailed Page Build data ──
   rows.push(['=== PAGE BUILD — DETAILED DATA ===']);
-  rows.push(['Person', 'Type', 'Rate (hrs/page)', 'Pages', 'Calculated Hours']);
+  const buildHeader = ['Person', 'Type', 'Rate (hrs/page)', 'Pages', 'Calculated Hours'];
+  rows.push(buildHeader);
   MEMBERS.forEach(m => {
     const pd = getP(m, mo);
     FIXED_BUILD.forEach(type => {
@@ -1016,16 +1085,21 @@ function exportExcel(){
       const hrs   = +(pages * rate).toFixed(2);
       rows.push([m, type, rate, pages, hrs]);
     });
+    // Extra rows
     (pd.build.extra || []).forEach(ex => {
       rows.push([m, ex.label || 'Custom', 'manual', ex.pages || 0, ex.hrs || 0]);
     });
+    // Sub-total per member (build)
     rows.push([m, 'SUBTOTAL', '', '', calcBuild(m, mo)]);
     rows.push([]);
   });
   rows.push(['TOTAL BUILD PAGES', calcTotalBuildPages(mo)]);
   rows.push([]);
+
+  // ── Section 2: Detailed Page Edit data ──
   rows.push(['=== PAGE EDIT — DETAILED DATA ===']);
-  rows.push(['Person', 'Type', 'Rate (hrs/page)', 'Pages', 'Calculated Hours']);
+  const editHeader = ['Person', 'Type', 'Rate (hrs/page)', 'Pages', 'Calculated Hours'];
+  rows.push(editHeader);
   MEMBERS.forEach(m => {
     const pd = getP(m, mo);
     FIXED_EDIT.forEach(type => {
@@ -1042,10 +1116,16 @@ function exportExcel(){
   });
   rows.push(['TOTAL EDIT PAGES', calcTotalEditPages(mo)]);
   rows.push([]);
+
+  // ── Section 3: Column Chart Data (Build hours per person) ──
   rows.push(['=== COLUMN CHART DATA — Build Hours per Person ===']);
   rows.push(['Person', 'Build Hours']);
-  MEMBERS.forEach(m => { rows.push([m, calcBuild(m, mo)]); });
+  MEMBERS.forEach(m => {
+    rows.push([m, calcBuild(m, mo)]);
+  });
   rows.push([]);
+
+  // ── Section 4: Pie Chart Data (Edit hours per person) ──
   const editTotal = MEMBERS.reduce((s,m) => s + calcEdit(m, mo), 0);
   rows.push(['=== PIE CHART DATA — Edit Hours Distribution ===']);
   rows.push(['Person', 'Edit Hours', 'Percentage (%)']);
@@ -1055,11 +1135,14 @@ function exportExcel(){
     rows.push([m, eh, pct]);
   });
   rows.push([]);
+
+  // ── Section 5: Summary — all types expanded ──
   rows.push(['=== SUMMARY — All Types Expanded ===']);
   rows.push(['Person', 'Section', 'Type', 'Rate (hrs/page)', 'Pages', 'Calc. Hours', 'Total Hours']);
   MEMBERS.forEach(m => {
     const pd = getP(m, mo);
     const total = calcTotal(m, mo);
+    // Build rows — all types
     FIXED_BUILD.forEach((type, i) => {
       const pages = +(pd.build[type] || 0);
       const rate  = BUILD_RATES[type];
@@ -1069,6 +1152,7 @@ function exportExcel(){
     (pd.build.extra || []).forEach(ex => {
       rows.push([m, 'Build', ex.label || 'Custom', 'manual', ex.pages || 0, ex.hrs || 0, '']);
     });
+    // Edit rows — all types
     FIXED_EDIT.forEach(type => {
       const pages = +(pd.edit[type] || 0);
       const rate  = EDIT_RATES[type];
@@ -1080,10 +1164,14 @@ function exportExcel(){
     });
     rows.push([]);
   });
+
+  // ── Section 6: Estimation Rates reference ──
   rows.push(['=== ESTIMATION RATES (FIXED) ===']);
   rows.push(['Type', 'Section', 'Rate (hrs/page)']);
   FIXED_BUILD.forEach(t => rows.push([t, 'Page Build', BUILD_RATES[t]]));
   FIXED_EDIT.forEach(t  => rows.push([t, 'Page Edit',  EDIT_RATES[t]]));
+
+  // Convert to CSV
   const csvContent = rows.map(r =>
     r.map(cell => {
       const s = String(cell == null ? '' : cell);
@@ -1092,136 +1180,346 @@ function exportExcel(){
         : s;
     }).join(',')
   ).join('\n');
+
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href=url; a.download=`Work_Estimation_${mo.replace(' ','_')}.csv`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  a.href     = url;
+  a.download = `Work_Estimation_${mo.replace(' ','_')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
+// ═══════════════════════════════════════════════════════════
 // ── EXPORT PDF ──
+// Opens a styled print-ready report in a new tab: KPI cards (total hours),
+// both live charts (column + pie) captured from canvas, chart explanations
+// with per-member breakdown, and a full detailed page count table.
 function exportPDF(){
   closeAllExportDropdowns();
-  const style = document.createElement('style');
-  style.id = '__pdf_print_style';
-  style.textContent = `
-    @media print {
-      @page { margin: 12mm; size: A3 landscape; }
-      header { position: relative !important; box-shadow: none !important; }
-      .export-wrap, #entryExportWrap { display: none !important; }
-      .theme-btn { display: none !important; }
-      .hdr-right { flex-wrap: nowrap; }
-      .fb-config-banner { display: none !important; }
-      .del-overlay { display: none !important; }
-      .chart-inner { height: 220px !important; }
-      .kpi:hover { transform: none !important; }
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    }
-  `;
-  document.head.appendChild(style);
-  setTimeout(() => {
-    window.print();
-    setTimeout(() => { const s=document.getElementById('__pdf_print_style');if(s)s.remove(); }, 1000);
-  }, 300);
+  const mo = currentMonth;
+
+  // Capture chart images from live canvases
+  let buildImg = '', editImg = '';
+  try { buildImg = document.getElementById('buildChart').toDataURL('image/png'); } catch(e){}
+  try { editImg  = document.getElementById('editChart').toDataURL('image/png');  } catch(e){}
+
+  const palette = ['#35297F','#4A268A','#5B2C8E','#7A1F8C','#961789','#6B2191','#3E2D85','#812090','#441E87','#8E1A8A'];
+  const buildDataArr = MEMBERS.map(m => ({ name:m, b:calcBuild(m,mo), e:calcEdit(m,mo), t:calcTotal(m,mo) }));
+  const grandTotal   = buildDataArr.reduce((s,d) => s+d.t, 0).toFixed(2);
+  const totalBldPgs  = calcTotalBuildPages(mo);
+  const totalEdtPgs  = calcTotalEditPages(mo);
+  const bTotalHrs    = buildDataArr.reduce((s,d) => s+d.b, 0).toFixed(2);
+  const eTotalHrs    = buildDataArr.reduce((s,d) => s+d.e, 0).toFixed(2);
+
+  const kpiCards = buildDataArr.map((d,i) => `
+    <div class="kpi-card" style="border-top:4px solid ${palette[i%palette.length]}">
+      <div class="kpi-label">${d.name}</div>
+      <div class="kpi-total" style="color:${palette[i%palette.length]}">${d.t}<span class="kpi-unit"> hrs</span></div>
+      <div class="kpi-split">Build: <strong>${d.b}</strong> &nbsp;|&nbsp; Edit: <strong>${d.e}</strong></div>
+    </div>`).join('');
+
+  const buildExpRows = [...buildDataArr].sort((a,b)=>b.b-a.b).map(d => {
+    const col = palette[MEMBERS.indexOf(d.name)%palette.length];
+    return `<li><span class="dswatch" style="background:${col}"></span><strong>${d.name}</strong>: ${d.b} hrs (${totalBldPgs} total build pages shared across team)</li>`;
+  }).join('');
+  const editExpRows = [...buildDataArr].sort((a,b)=>b.e-a.e).map(d => {
+    const pct = +eTotalHrs > 0 ? ((d.e / +eTotalHrs)*100).toFixed(1) : 0;
+    const col = palette[MEMBERS.indexOf(d.name)%palette.length];
+    return `<li><span class="dswatch" style="background:${col}"></span><strong>${d.name}</strong>: ${d.e} hrs &mdash; ${pct}% of total edit hours</li>`;
+  }).join('');
+
+  const detailRows = MEMBERS.map((m,mi) => {
+    const pd = getP(m, mo);
+    const col = palette[mi%palette.length];
+    const bTot = calcBuild(m,mo), eTot = calcEdit(m,mo), tot = calcTotal(m,mo);
+    const bR = FIXED_BUILD.map(type => {
+      const pages=+(pd.build[type]||0), rate=BUILD_RATES[type], hrs=+(pages*rate).toFixed(2);
+      return `<tr><td class="ind">↳ ${type}</td><td><span class="bb">Build</span></td><td class="nr">${rate}</td><td class="nr">${pages}</td><td class="nr hrs">${hrs>0?hrs:'—'}</td></tr>`;
+    }).join('');
+    const bX = (pd.build.extra||[]).map(ex =>
+      `<tr><td class="ind">↳ ${ex.label||'Custom'}</td><td><span class="bb">Build</span></td><td class="nr">manual</td><td class="nr">${ex.pages||0}</td><td class="nr hrs">${ex.hrs||0}</td></tr>`
+    ).join('');
+    const eR = FIXED_EDIT.map(type => {
+      const pages=+(pd.edit[type]||0), rate=EDIT_RATES[type], hrs=+(pages*rate).toFixed(2);
+      return `<tr><td class="ind">↳ ${type}</td><td><span class="eb">Edit</span></td><td class="nr">${rate}</td><td class="nr">${pages}</td><td class="nr hrs">${hrs>0?hrs:'—'}</td></tr>`;
+    }).join('');
+    const eX = (pd.edit.extra||[]).map(ex =>
+      `<tr><td class="ind">↳ ${ex.label||'Custom'}</td><td><span class="eb">Edit</span></td><td class="nr">manual</td><td class="nr">${ex.pages||0}</td><td class="nr hrs">${ex.hrs||0}</td></tr>`
+    ).join('');
+    return `
+      <tr class="mrow"><td colspan="4" style="color:${col};font-weight:700;font-size:13px;border-left:4px solid ${col};padding-left:9px">${m}</td><td class="nr" style="color:${col};font-weight:800;font-size:13px">${tot} hrs</td></tr>
+      ${bR}${bX}
+      <tr class="strow"><td class="ind" style="color:#6B5BAE">Build Subtotal</td><td></td><td></td><td></td><td class="nr" style="color:#5843D4;font-weight:700">${bTot} hrs</td></tr>
+      ${eR}${eX}
+      <tr class="strow"><td class="ind" style="color:#6B5BAE">Edit Subtotal</td><td></td><td></td><td></td><td class="nr" style="color:#961789;font-weight:700">${eTot} hrs</td></tr>
+      <tr class="sprow"><td colspan="5"></td></tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Work Estimation — ${mo}</title>
+<style>
+@page{margin:13mm 11mm;size:A4 portrait;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#1a1a2e;background:#fff;}
+.hdr{background:linear-gradient(135deg,#35297F 0%,#6B1A82 55%,#961789 100%);padding:15px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:9px;margin-bottom:15px;}
+.hdr h1{font-size:18px;font-weight:800;color:#fff;}
+.hdr .s{font-size:10px;color:rgba(255,255,255,.75);margin-top:2px;}
+.hdr .mpill{background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);border-radius:18px;padding:5px 14px;font-size:12px;font-weight:700;color:#fff;}
+.stitle{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B5BAE;margin:13px 0 8px;display:flex;align-items:center;gap:7px;}
+.stitle::after{content:'';flex:1;height:1.5px;background:#D0C8FF;}
+.kgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;}
+.kpi-card{border:1.5px solid #D0C8FF;border-radius:9px;padding:10px;}
+.kpi-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B5BAE;margin-bottom:4px;}
+.kpi-total{font-size:20px;font-weight:800;line-height:1;}
+.kpi-unit{font-size:9px;font-weight:400;color:#6B5BAE;}
+.kpi-split{font-size:9px;color:#6B5BAE;margin-top:3px;}
+.gbar{background:#EDEAFF;border:1.5px solid #D0C8FF;border-radius:7px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;}
+.gbar .gl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B5BAE;}
+.gbar .gv{font-size:16px;font-weight:800;color:#35297F;}
+.gbar .gv span{font-size:10px;color:#6B5BAE;font-weight:400;}
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.cbox{border:1.5px solid #D0C8FF;border-radius:9px;padding:10px;}
+.cbox h3{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#5B2C8E;margin-bottom:7px;}
+.cbox img{width:100%;border-radius:5px;}
+.cstat{background:#F5F2FF;border-radius:5px;padding:4px 8px;font-size:9px;color:#6B5BAE;margin-top:6px;font-weight:600;text-align:center;}
+.expbox{border:1.5px solid #D0C8FF;border-radius:9px;padding:10px 12px;background:#FAFAFE;}
+.expbox h3{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#35297F;margin-bottom:6px;}
+.expbox ul{list-style:none;padding:0;}
+.expbox li{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:10px;color:#333;border-bottom:1px solid #EDEAFF;}
+.expbox li:last-child{border:none;}
+.dswatch{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block;}
+.dtbl{width:100%;border-collapse:collapse;font-size:10px;}
+.dtbl thead th{background:#F5F2FF;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B5BAE;padding:6px 8px;text-align:left;border-bottom:1.5px solid #D0C8FF;}
+.dtbl td{padding:4px 8px;border-bottom:1px solid #EEE;}
+.dtbl .mrow td{background:#F8F7FF;}
+.dtbl .strow td{background:#FAF9FF;font-size:9px;}
+.dtbl .sprow td{height:4px;border:none;background:#fff;}
+.nr{text-align:right;font-weight:600;font-family:monospace;}
+.hrs{color:#961789;}
+.ind{padding-left:18px!important;color:#444;}
+.bb{display:inline-block;padding:1px 6px;border-radius:9px;font-size:8px;font-weight:700;text-transform:uppercase;background:rgba(88,67,212,.09);color:#5843D4;}
+.eb{display:inline-block;padding:1px 6px;border-radius:9px;font-size:8px;font-weight:700;text-transform:uppercase;background:rgba(150,23,137,.09);color:#961789;}
+.rbox{background:#F5F2FF;border:1.5px solid #D0C8FF;border-radius:7px;padding:9px 12px;margin-top:12px;}
+.rbox h4{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B5BAE;margin-bottom:6px;}
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.ri{background:#fff;border:1px solid #D0C8FF;border-radius:5px;padding:4px 8px;font-size:9px;display:flex;justify-content:space-between;}
+.rb{color:#5843D4;font-weight:700;}
+.re{color:#961789;font-weight:700;}
+.foot{margin-top:13px;padding:6px 0;border-top:1.5px solid #D0C8FF;display:flex;justify-content:space-between;font-size:8px;color:#6B5BAE;}
+</style></head><body>
+<div class="hdr"><div><h1>Work Estimation Dashboard</h1><div class="s">Page Build &amp; Edit Tracker — Monthly Report</div></div><div class="mpill">${mo}</div></div>
+<div class="stitle">Total Hours per Team Member</div>
+<div class="kgrid">${kpiCards}</div>
+<div class="gbar"><span class="gl">Grand Total — All Members</span><span class="gv">${grandTotal} <span>hrs &nbsp;|&nbsp; Build Pages: ${totalBldPgs} &nbsp;|&nbsp; Edit Pages: ${totalEdtPgs}</span></span></div>
+<div class="stitle">Charts</div>
+<div class="crow">
+  <div class="cbox"><h3>Column Chart — Page Build Hours per Person</h3>${buildImg?`<img src="${buildImg}" alt="Build Chart">`:'<p style="color:#aaa;text-align:center;padding:16px;font-size:10px">Chart not available</p>'}<div class="cstat">Total Build: ${bTotalHrs} hrs &nbsp;|&nbsp; Build Pages: ${totalBldPgs}</div></div>
+  <div class="cbox"><h3>Pie Chart — Page Edit Hours Distribution</h3>${editImg?`<img src="${editImg}" alt="Edit Chart">`:'<p style="color:#aaa;text-align:center;padding:16px;font-size:10px">Chart not available</p>'}<div class="cstat">Total Edit: ${eTotalHrs} hrs &nbsp;|&nbsp; Edit Pages: ${totalEdtPgs}</div></div>
+</div>
+<div class="crow" style="margin-top:0">
+  <div class="expbox"><h3>Build Chart Explanation</h3><ul>${buildExpRows}</ul></div>
+  <div class="expbox"><h3>Edit Chart Explanation</h3><ul>${editExpRows}</ul></div>
+</div>
+<div class="stitle">Detailed Page Count Breakdown — ${mo}</div>
+<table class="dtbl"><thead><tr><th style="width:120px">Person / Type</th><th style="width:55px">Section</th><th style="width:75px;text-align:right">Rate (hrs/pg)</th><th style="width:55px;text-align:right">Pages</th><th style="text-align:right">Calc. Hours</th></tr></thead><tbody>${detailRows}</tbody></table>
+<div class="rbox"><h4>Fixed Estimation Rates Reference</h4><div class="rgrid"><div class="ri"><span>Complex Build</span><span class="rb">2.5 hrs/pg</span></div><div class="ri"><span>Moderate Build</span><span class="rb">2.0 hrs/pg</span></div><div class="ri"><span>Simple Build</span><span class="rb">1.5 hrs/pg</span></div><div class="ri"><span>Complex Edit</span><span class="re">1.0 hr/pg</span></div><div class="ri"><span>Moderate Edit</span><span class="re">0.75 hr/pg</span></div><div class="ri"><span>Simple Edit</span><span class="re">0.5 hr/pg</span></div></div></div>
+<div class="foot"><span>Work Estimation Dashboard &nbsp;|&nbsp; ${mo}</span><span>Generated: ${new Date().toLocaleString()}</span></div>
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+
+  const blob = new Blob([html], { type:'text/html;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const win  = window.open(url, '_blank');
+  if(!win){alert('Please allow pop-ups for this page to export as PDF.');}
+  setTimeout(() => URL.revokeObjectURL(url), 90000);
 }
 
+// ═══════════════════════════════════════════════════════════
 // ── EXPORT PPT ──
+// Generates a PowerPoint file with:
+//   Slide 1 — Title slide
+//   Slide 2 — Total Hours per Member (KPI cards)
+//   Slide 3 — Column chart (Build Hours)
+//   Slide 4 — Pie chart (Edit Hours)
+// Uses canvas .toDataURL() to embed the live Chart.js charts.
+// ═══════════════════════════════════════════════════════════
 async function exportPPT(){
   closeAllExportDropdowns();
   const mo = currentMonth;
-  if(typeof PptxGenJS === 'undefined'){alert('PPT library not loaded. Please check your internet connection and try again.');return;}
-  const pptx = new PptxGenJS();
-  pptx.layout = 'LAYOUT_WIDE';
-  const PURPLE='35297F',PINK='961789',WHITE='FFFFFF',LIGHT='F5F2FF',MUTED='6B5BAE';
-  const palette=['35297F','4A268A','5B2C8E','7A1F8C','961789','6B2191','3E2D85','812090','441E87','8E1A8A'];
-  const memberColors=MEMBERS.map((m,i)=>palette[i%palette.length]);
-  function addHeader(slide,title){
-    slide.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:0.65,fill:{type:'solid',color:PURPLE}});
-    slide.addText('Work Estimation Dashboard',{x:0.2,y:0.05,w:6,h:0.55,fontSize:13,bold:true,color:WHITE,fontFace:'Calibri'});
-    slide.addText(mo,{x:6.3,y:0.05,w:3,h:0.55,fontSize:11,color:'C9BFFF',fontFace:'Calibri',align:'center'});
-    slide.addText(title,{x:0.2,y:0.75,w:12.9,h:0.45,fontSize:16,bold:true,color:PURPLE,fontFace:'Calibri'});
+
+  if(typeof PptxGenJS === 'undefined'){
+    alert('PPT library not loaded. Please check your internet connection and try again.');
+    return;
   }
-  const s1=pptx.addSlide();
-  s1.addShape(pptx.ShapeType.rect,{x:0,y:0,w:'100%',h:'100%',fill:{type:'solid',color:PURPLE}});
-  s1.addShape(pptx.ShapeType.rect,{x:0,y:5.8,w:'100%',h:1.7,fill:{type:'solid',color:PINK}});
-  s1.addText('Work Estimation Dashboard',{x:0.5,y:1.5,w:12.3,h:1.2,fontSize:36,bold:true,color:WHITE,fontFace:'Calibri',align:'center'});
-  s1.addText('Page Build & Edit Tracker',{x:0.5,y:2.8,w:12.3,h:0.6,fontSize:18,color:'C9BFFF',fontFace:'Calibri',align:'center'});
-  s1.addText(mo,{x:0.5,y:3.6,w:12.3,h:0.55,fontSize:22,bold:true,color:WHITE,fontFace:'Calibri',align:'center'});
-  s1.addText(`Generated: ${new Date().toLocaleDateString()}`,{x:0.5,y:6,w:12.3,h:0.4,fontSize:11,color:WHITE,fontFace:'Calibri',align:'center'});
-  const s2=pptx.addSlide();
-  s2.background={color:'F8F7FF'};
-  addHeader(s2,'Total Hours per Team Member');
-  const cardW=2.0,cardH=1.4;
-  const totalCols=Math.min(MEMBERS.length,5);
-  const totalStartX=(13.33-totalCols*(cardW+0.2))/2;
-  MEMBERS.forEach((m,i)=>{
-    const bHrs=calcBuild(m,mo),eHrs=calcEdit(m,mo),tot=+(bHrs+eHrs).toFixed(2);
-    const col=memberColors[i],cx=totalStartX+i*(cardW+0.2),cy=1.4;
-    s2.addShape(pptx.ShapeType.rect,{x:cx,y:cy,w:cardW,h:cardH,fill:{type:'solid',color:WHITE},line:{color:'D0C8FF',width:1},rectRadius:0.08});
-    s2.addShape(pptx.ShapeType.rect,{x:cx,y:cy,w:cardW,h:0.07,fill:{type:'solid',color:col}});
-    s2.addText(m,{x:cx,y:cy+0.12,w:cardW,h:0.3,fontSize:10,bold:true,color:MUTED,fontFace:'Calibri',align:'center'});
-    s2.addText(`${tot} hrs`,{x:cx,y:cy+0.42,w:cardW,h:0.5,fontSize:20,bold:true,color:col,fontFace:'Calibri',align:'center'});
-    s2.addText(`Build: ${bHrs}  |  Edit: ${eHrs}`,{x:cx,y:cy+0.95,w:cardW,h:0.3,fontSize:9,color:MUTED,fontFace:'Calibri',align:'center'});
+
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE'; // 13.33 x 7.5 inches
+
+  const PURPLE  = '35297F';
+  const PINK    = '961789';
+  const WHITE   = 'FFFFFF';
+  const LIGHT   = 'F5F2FF';
+  const MUTED   = '6B5BAE';
+
+  // Chart palette (hex without #)
+  const palette = ['35297F','4A268A','5B2C8E','7A1F8C','961789','6B2191','3E2D85','812090','441E87','8E1A8A'];
+  const memberColors = MEMBERS.map((m,i) => palette[i % palette.length]);
+
+  // ── Helpers ──
+  function addHeader(slide, title){
+    // Gradient bar across top
+    slide.addShape(pptx.ShapeType.rect, { x:0, y:0, w:'100%', h:0.65, fill:{type:'solid',color:PURPLE} });
+    slide.addText('Work Estimation Dashboard', {
+      x:0.2, y:0.05, w:6, h:0.55,
+      fontSize:13, bold:true, color:WHITE, fontFace:'Calibri'
+    });
+    slide.addText(mo, {
+      x:6.3, y:0.05, w:3, h:0.55,
+      fontSize:11, color:'C9BFFF', fontFace:'Calibri', align:'center'
+    });
+    slide.addText(title, {
+      x:0.2, y:0.75, w:12.9, h:0.45,
+      fontSize:16, bold:true, color:PURPLE, fontFace:'Calibri'
+    });
+  }
+
+  // ── Slide 1: Title ──
+  const s1 = pptx.addSlide();
+  s1.addShape(pptx.ShapeType.rect, { x:0, y:0, w:'100%', h:'100%', fill:{type:'solid',color:PURPLE} });
+  s1.addShape(pptx.ShapeType.rect, { x:0, y:5.8, w:'100%', h:1.7, fill:{type:'solid',color:PINK} });
+  s1.addText('Work Estimation Dashboard', {
+    x:0.5, y:1.5, w:12.3, h:1.2,
+    fontSize:36, bold:true, color:WHITE, fontFace:'Calibri', align:'center'
   });
-  const grandTotal=MEMBERS.reduce((s,m)=>s+calcTotal(m,mo),0).toFixed(2);
-  s2.addShape(pptx.ShapeType.rect,{x:0.3,y:3.1,w:12.73,h:0.55,fill:{type:'solid',color:'EDEAFF'},line:{color:'D0C8FF',width:1}});
-  s2.addText(`Grand Total — All Members: ${grandTotal} hrs  (${mo})`,{x:0.3,y:3.1,w:12.73,h:0.55,fontSize:13,bold:true,color:PURPLE,fontFace:'Calibri',align:'center'});
-  let lx=0.3;
-  s2.addText('Members:',{x:lx,y:3.85,w:1.1,h:0.3,fontSize:9,color:MUTED,fontFace:'Calibri'});
-  lx+=1.15;
-  MEMBERS.forEach((m,i)=>{
-    s2.addShape(pptx.ShapeType.rect,{x:lx,y:3.93,w:0.14,h:0.14,fill:{type:'solid',color:memberColors[i]}});
-    s2.addText(m,{x:lx+0.18,y:3.85,w:1.5,h:0.3,fontSize:9,color:MUTED,fontFace:'Calibri'});
-    lx+=1.7;
+  s1.addText('Page Build & Edit Tracker', {
+    x:0.5, y:2.8, w:12.3, h:0.6,
+    fontSize:18, color:'C9BFFF', fontFace:'Calibri', align:'center'
   });
-  const s3=pptx.addSlide();
-  s3.background={color:'F8F7FF'};
-  addHeader(s3,'Page Build — Calculated Hours per Person');
-  const buildCanvas=document.getElementById('buildChart');
-  let buildImgData=null;
-  try{buildImgData=buildCanvas.toDataURL('image/png');}catch(e){}
-  if(buildImgData){s3.addImage({data:buildImgData,x:0.5,y:1.3,w:8.5,h:4.5});}
-  const buildData=MEMBERS.map(m=>({name:m,hrs:calcBuild(m,mo)}));
-  buildData.sort((a,b)=>b.hrs-a.hrs);
-  let ty=1.4;
-  s3.addText('Build Hours',{x:9.3,y:ty-0.3,w:3.5,h:0.4,fontSize:11,bold:true,color:PURPLE,fontFace:'Calibri'});
-  buildData.forEach((d,i)=>{
-    const col=memberColors[MEMBERS.indexOf(d.name)];
-    s3.addShape(pptx.ShapeType.rect,{x:9.3,y:ty+0.05,w:0.12,h:0.22,fill:{type:'solid',color:col}});
-    s3.addText(d.name,{x:9.46,y:ty,w:2,h:0.32,fontSize:10,color:'333333',fontFace:'Calibri'});
-    s3.addText(`${d.hrs} hrs`,{x:11.5,y:ty,w:1.3,h:0.32,fontSize:10,bold:true,color:col,fontFace:'Calibri',align:'right'});
-    ty+=0.38;
+  s1.addText(mo, {
+    x:0.5, y:3.6, w:12.3, h:0.55,
+    fontSize:22, bold:true, color:WHITE, fontFace:'Calibri', align:'center'
   });
-  s3.addShape(pptx.ShapeType.rect,{x:9.3,y:ty+0.15,w:3.5,h:0.5,fill:{type:'solid',color:'EDEAFF'},line:{color:'D0C8FF',width:1}});
-  s3.addText(`Total Build Pages: ${calcTotalBuildPages(mo)}`,{x:9.3,y:ty+0.15,w:3.5,h:0.5,fontSize:10,bold:true,color:PURPLE,fontFace:'Calibri',align:'center'});
-  const s4=pptx.addSlide();
-  s4.background={color:'F8F7FF'};
-  addHeader(s4,'Page Edit — Hours Distribution');
-  const editCanvas=document.getElementById('editChart');
-  let editImgData=null;
-  try{editImgData=editCanvas.toDataURL('image/png');}catch(e){}
-  if(editImgData){s4.addImage({data:editImgData,x:0.5,y:1.3,w:6,h:5});}
-  const editDataArr=MEMBERS.map(m=>({name:m,hrs:calcEdit(m,mo)}));
-  const editTotalVal=editDataArr.reduce((s,d)=>s+d.hrs,0);
-  editDataArr.sort((a,b)=>b.hrs-a.hrs);
-  let ey=1.4;
-  s4.addText('Edit Hours',{x:7.0,y:ey-0.3,w:5.8,h:0.4,fontSize:11,bold:true,color:PINK,fontFace:'Calibri'});
-  s4.addText('Member',{x:7.0,y:ey,w:2.5,h:0.3,fontSize:9,bold:true,color:MUTED,fontFace:'Calibri'});
-  s4.addText('Hours',{x:9.5,y:ey,w:1.3,h:0.3,fontSize:9,bold:true,color:MUTED,fontFace:'Calibri',align:'center'});
-  s4.addText('%',{x:10.9,y:ey,w:1.5,h:0.3,fontSize:9,bold:true,color:MUTED,fontFace:'Calibri',align:'center'});
-  ey+=0.36;
-  editDataArr.forEach(d=>{
-    const col=memberColors[MEMBERS.indexOf(d.name)];
-    const pct=editTotalVal>0?((d.hrs/editTotalVal)*100).toFixed(1):0;
-    s4.addShape(pptx.ShapeType.rect,{x:7.0,y:ey+0.07,w:0.12,h:0.2,fill:{type:'solid',color:col}});
-    s4.addText(d.name,{x:7.16,y:ey,w:2.3,h:0.32,fontSize:10,color:'333333',fontFace:'Calibri'});
-    s4.addText(`${d.hrs}`,{x:9.5,y:ey,w:1.3,h:0.32,fontSize:10,bold:true,color:col,fontFace:'Calibri',align:'center'});
-    s4.addText(`${pct}%`,{x:10.9,y:ey,w:1.5,h:0.32,fontSize:10,color:MUTED,fontFace:'Calibri',align:'center'});
-    ey+=0.38;
+  s1.addText(`Generated: ${new Date().toLocaleDateString()}`, {
+    x:0.5, y:6, w:12.3, h:0.4,
+    fontSize:11, color:WHITE, fontFace:'Calibri', align:'center'
   });
-  s4.addShape(pptx.ShapeType.rect,{x:7.0,y:ey+0.2,w:5.3,h:0.5,fill:{type:'solid',color:'FCE8FF'},line:{color:'E5BADC',width:1}});
-  s4.addText(`Total Edit Pages: ${calcTotalEditPages(mo)}  |  Total Edit Hrs: ${editTotalVal.toFixed(2)}`,{x:7.0,y:ey+0.2,w:5.3,h:0.5,fontSize:10,bold:true,color:PINK,fontFace:'Calibri',align:'center'});
-  pptx.writeFile({fileName:`Work_Estimation_${mo.replace(' ','_')}.pptx`});
+
+  // ── Slide 2: Total Hours KPI ──
+  const s2 = pptx.addSlide();
+  s2.background = {color:'F8F7FF'};
+  addHeader(s2, 'Total Hours per Team Member');
+
+  const cardW = 2.0, cardH = 1.4;
+  const totalCols = Math.min(MEMBERS.length, 5);
+  const totalStartX = (13.33 - totalCols * (cardW + 0.2)) / 2;
+
+  MEMBERS.forEach((m, i) => {
+    const bHrs = calcBuild(m, mo);
+    const eHrs = calcEdit(m, mo);
+    const tot  = +(bHrs + eHrs).toFixed(2);
+    const col  = memberColors[i];
+    const cx   = totalStartX + i * (cardW + 0.2);
+    const cy   = 1.4;
+
+    s2.addShape(pptx.ShapeType.rect, { x:cx, y:cy, w:cardW, h:cardH, fill:{type:'solid',color:WHITE}, line:{color:'D0C8FF',width:1}, rectRadius:0.08 });
+    s2.addShape(pptx.ShapeType.rect, { x:cx, y:cy, w:cardW, h:0.07, fill:{type:'solid',color:col} });
+    s2.addText(m, { x:cx, y:cy+0.12, w:cardW, h:0.3, fontSize:10, bold:true, color:MUTED, fontFace:'Calibri', align:'center' });
+    s2.addText(`${tot} hrs`, { x:cx, y:cy+0.42, w:cardW, h:0.5, fontSize:20, bold:true, color:col, fontFace:'Calibri', align:'center' });
+    s2.addText(`Build: ${bHrs}  |  Edit: ${eHrs}`, { x:cx, y:cy+0.95, w:cardW, h:0.3, fontSize:9, color:MUTED, fontFace:'Calibri', align:'center' });
+  });
+
+  // Grand total strip
+  const grandTotal = MEMBERS.reduce((s,m) => s + calcTotal(m, mo), 0).toFixed(2);
+  s2.addShape(pptx.ShapeType.rect, { x:0.3, y:3.1, w:12.73, h:0.55, fill:{type:'solid',color:'EDEAFF'}, line:{color:'D0C8FF',width:1} });
+  s2.addText(`Grand Total — All Members: ${grandTotal} hrs  (${mo})`, {
+    x:0.3, y:3.1, w:12.73, h:0.55,
+    fontSize:13, bold:true, color:PURPLE, fontFace:'Calibri', align:'center'
+  });
+
+  // Legend
+  let lx = 0.3;
+  s2.addText('Members:', {x:lx, y:3.85, w:1.1, h:0.3, fontSize:9, color:MUTED, fontFace:'Calibri'});
+  lx += 1.15;
+  MEMBERS.forEach((m, i) => {
+    s2.addShape(pptx.ShapeType.rect, {x:lx, y:3.93, w:0.14, h:0.14, fill:{type:'solid',color:memberColors[i]}});
+    s2.addText(m, {x:lx+0.18, y:3.85, w:1.5, h:0.3, fontSize:9, color:MUTED, fontFace:'Calibri'});
+    lx += 1.7;
+  });
+
+  // ── Slide 3: Column Chart (Build Hours) ──
+  const s3 = pptx.addSlide();
+  s3.background = {color:'F8F7FF'};
+  addHeader(s3, 'Page Build — Calculated Hours per Person');
+
+  // Get chart image from live canvas
+  const buildCanvas = document.getElementById('buildChart');
+  let buildImgData = null;
+  try { buildImgData = buildCanvas.toDataURL('image/png'); } catch(e){}
+
+  if(buildImgData){
+    s3.addImage({ data: buildImgData, x:0.5, y:1.3, w:8.5, h:4.5 });
+  }
+
+  // Data table beside chart
+  const buildData = MEMBERS.map(m => ({name:m, hrs:calcBuild(m,mo)}));
+  buildData.sort((a,b) => b.hrs - a.hrs);
+  let ty = 1.4;
+  s3.addText('Build Hours', {x:9.3, y:ty-0.3, w:3.5, h:0.4, fontSize:11, bold:true, color:PURPLE, fontFace:'Calibri'});
+  buildData.forEach((d, i) => {
+    const col = memberColors[MEMBERS.indexOf(d.name)];
+    s3.addShape(pptx.ShapeType.rect, {x:9.3, y:ty+0.05, w:0.12, h:0.22, fill:{type:'solid',color:col}});
+    s3.addText(d.name, {x:9.46, y:ty, w:2, h:0.32, fontSize:10, color:'333333', fontFace:'Calibri'});
+    s3.addText(`${d.hrs} hrs`, {x:11.5, y:ty, w:1.3, h:0.32, fontSize:10, bold:true, color:col, fontFace:'Calibri', align:'right'});
+    ty += 0.38;
+  });
+  // Total build pages
+  s3.addShape(pptx.ShapeType.rect, {x:9.3, y:ty+0.15, w:3.5, h:0.5, fill:{type:'solid',color:'EDEAFF'}, line:{color:'D0C8FF',width:1}});
+  s3.addText(`Total Build Pages: ${calcTotalBuildPages(mo)}`, {x:9.3, y:ty+0.15, w:3.5, h:0.5, fontSize:10, bold:true, color:PURPLE, fontFace:'Calibri', align:'center'});
+
+  // ── Slide 4: Pie Chart (Edit Hours) ──
+  const s4 = pptx.addSlide();
+  s4.background = {color:'F8F7FF'};
+  addHeader(s4, 'Page Edit — Hours Distribution');
+
+  const editCanvas = document.getElementById('editChart');
+  let editImgData = null;
+  try { editImgData = editCanvas.toDataURL('image/png'); } catch(e){}
+
+  if(editImgData){
+    s4.addImage({ data: editImgData, x:0.5, y:1.3, w:6, h:5 });
+  }
+
+  // Pie legend table
+  const editDataArr = MEMBERS.map(m => ({name:m, hrs:calcEdit(m,mo)}));
+  const editTotalVal = editDataArr.reduce((s,d) => s+d.hrs, 0);
+  editDataArr.sort((a,b) => b.hrs - a.hrs);
+  let ey = 1.4;
+  s4.addText('Edit Hours', {x:7.0, y:ey-0.3, w:5.8, h:0.4, fontSize:11, bold:true, color:PINK, fontFace:'Calibri'});
+  // Header row
+  s4.addText('Member', {x:7.0, y:ey, w:2.5, h:0.3, fontSize:9, bold:true, color:MUTED, fontFace:'Calibri'});
+  s4.addText('Hours', {x:9.5, y:ey, w:1.3, h:0.3, fontSize:9, bold:true, color:MUTED, fontFace:'Calibri', align:'center'});
+  s4.addText('%', {x:10.9, y:ey, w:1.5, h:0.3, fontSize:9, bold:true, color:MUTED, fontFace:'Calibri', align:'center'});
+  ey += 0.36;
+  editDataArr.forEach(d => {
+    const col = memberColors[MEMBERS.indexOf(d.name)];
+    const pct = editTotalVal > 0 ? ((d.hrs / editTotalVal)*100).toFixed(1) : 0;
+    s4.addShape(pptx.ShapeType.rect, {x:7.0, y:ey+0.07, w:0.12, h:0.2, fill:{type:'solid',color:col}});
+    s4.addText(d.name,     {x:7.16, y:ey, w:2.3, h:0.32, fontSize:10, color:'333333', fontFace:'Calibri'});
+    s4.addText(`${d.hrs}`, {x:9.5,  y:ey, w:1.3, h:0.32, fontSize:10, bold:true, color:col, fontFace:'Calibri', align:'center'});
+    s4.addText(`${pct}%`,  {x:10.9, y:ey, w:1.5, h:0.32, fontSize:10, color:MUTED, fontFace:'Calibri', align:'center'});
+    ey += 0.38;
+  });
+  // Total edit pages
+  s4.addShape(pptx.ShapeType.rect, {x:7.0, y:ey+0.2, w:5.3, h:0.5, fill:{type:'solid',color:'FCE8FF'}, line:{color:'E5BADC',width:1}});
+  s4.addText(`Total Edit Pages: ${calcTotalEditPages(mo)}  |  Total Edit Hrs: ${editTotalVal.toFixed(2)}`, {
+    x:7.0, y:ey+0.2, w:5.3, h:0.5, fontSize:10, bold:true, color:PINK, fontFace:'Calibri', align:'center'
+  });
+
+  // Save
+  pptx.writeFile({ fileName: `Work_Estimation_${mo.replace(' ','_')}.pptx` });
 }
 
 // ── Render + Init ──
@@ -1229,9 +1527,11 @@ function renderDashboard(){renderKPI();renderCharts();renderTable();}
 
 async function init(){
   document.getElementById('kpiRow').innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:13px">⏳ Loading data…</div>`;
+
   const saved=loadMembersState();
   MEMBERS=saved||[...BASE_MEMBERS];
   activePerson=MEMBERS.length>0?MEMBERS[0]:BASE_MEMBERS[0];
+
   const savedCfg=loadFbConfig();
   if(savedCfg){
     const ok=window.initFirebase(savedCfg);
@@ -1241,15 +1541,24 @@ async function init(){
       window.fbSubscribe(onRemoteChange);
     }
   }
+
   DB=await loadDB();
-  if(!DB[DEFAULT_MONTH]){DB[DEFAULT_MONTH]=emptyMonth();}
-  if(!DB[currentMonth]){currentMonth=DEFAULT_MONTH;}
+
+  if(!DB[DEFAULT_MONTH]){
+    DB[DEFAULT_MONTH]=emptyMonth();
+  }
+  if(!DB[currentMonth]){
+    currentMonth=DEFAULT_MONTH;
+  }
+
   rebuildMonthSelect();
   renderDashboard();
   updateExportMonthLabels();
-  document.getElementById('entryMonth').value='January';
-  document.getElementById('entryYear').value=_CUR_YEAR;
+
+  document.getElementById('entryMonth').value = 'January';
+  document.getElementById('entryYear').value  = _CUR_YEAR;
   buildEntryPanel();
+
   if(!('showOpenFilePicker' in window)){
     document.getElementById('apiWarning').style.display='block';
     document.getElementById('connectBtn').style.display='none';
